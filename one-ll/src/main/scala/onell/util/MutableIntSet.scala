@@ -12,8 +12,10 @@ class MutableIntSet(maxElement: Int) extends IntSet {
     * Clears this set.
     */
   def clear(): Unit = {
-    for (i <- 0 until mySize) {
+    var i = 0
+    while (i < mySize) {
       contained(elements(i)) = false
+      i += 1
     }
     mySize = 0
   }
@@ -21,9 +23,11 @@ class MutableIntSet(maxElement: Int) extends IntSet {
   override def size: Int = mySize
   override def apply(element: Int): Boolean = contained(element)
   @inline
-  override def foreach(fun: Int => Unit): Unit = {
-    for (i <- 0 until mySize) {
+  override final def foreach(fun: Int => Unit): Unit = {
+    var i = 0
+    while (i < mySize) {
       fun(elements(i))
+      i += 1
     }
   }
   override def fill(array: Array[Int]): Int = {

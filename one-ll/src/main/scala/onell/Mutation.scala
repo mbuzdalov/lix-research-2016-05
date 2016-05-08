@@ -16,10 +16,10 @@ class Mutation(n: Int, initialP: Double)(implicit rng: Random) extends IntSet {
   private def offset() = if (p == 1) 1 else 1 + (math.log(rng.nextDouble()) / log1p).toInt
 
   @inline
-  override def foreach(fun: (Int) => Unit): Unit = indices.foreach(fun)
-  override def size: Int                         = indices.size
-  override def apply(element: Int): Boolean      = indices(element)
-  override def fill(array: Array[Int]): Int      = indices.fill(array)
+  override final def foreach(fun: (Int) => Unit): Unit = indices.foreach(fun)
+  override def size: Int                               = indices.size
+  override def apply(element: Int): Boolean            = indices(element)
+  override def fill(array: Array[Int]): Int            = indices.fill(array)
 
   def setProbability(newP: Double): Unit = {
     p = newP
