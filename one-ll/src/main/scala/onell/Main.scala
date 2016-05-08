@@ -13,9 +13,36 @@ import scala.collection.JavaConverters._
 import scala.util.Random
 
 /**
-  * A main class for experiments.
+  * The main class which runs experiments.
   */
 object Main {
+  def main(args: Array[String]): Unit = {
+    Locale.setDefault(Locale.US)
+    val runner = new Runner
+    try {
+      for (problemGen <- Seq((n: Int) => new OneMax(n))) {
+        for (n <- Seq(10, 100, 1000, 10000, 100000, 1000000)) {
+          val problem = problemGen(n)
+          println(s"${problem.name}:")
+          for (algorithm <- Seq(
+            OnePlusOneEA,
+            new OnePlusLambdaLambdaGA(),
+            new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
+          )) {
+            val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
+            val names = algorithm.metrics
+            println(s"  ${algorithm.name}:")
+            for ((stat, name) <- (stats, names).zipped) {
+              println(s"    $name: ${stat.everything}")
+            }
+          }
+        }
+      }
+    } finally {
+      runner.close()
+    }
+  }
+
   implicit def functionToCallable[T](function: () => T): Callable[T] = new Callable[T] {
     override def call(): T = function()
   }
@@ -36,7 +63,7 @@ object Main {
         override protected def initialValue(): MutationAwarePseudoBooleanProblem = problem.clone
       }
       val timeStart = System.nanoTime()
-      val tasks: Array[Callable[Seq[Long]]] = Array.fill(times)(() => algorithm.solve(threadLocalProblem.get()))
+      val tasks = Array.fill[Callable[Seq[Long]]](times)(() => algorithm.solve(threadLocalProblem.get()))
       val rv = service.invokeAll(Arrays.asList(tasks :_*)).asScala.map(_.get()).toIndexedSeq
       val timeDone = (System.nanoTime() - timeStart) / 1e9
       println(s"  [$times runs done in $timeDone s]")
@@ -105,33 +132,6 @@ object Main {
 
     def everything: String = {
       f"{$mean%.02f \u00b1 $std%.02f, med = $median%.02f, iqr = $interQuartile%.02f}"
-    }
-  }
-
-  def main(args: Array[String]): Unit = {
-    Locale.setDefault(Locale.US)
-    val runner = new Runner
-    try {
-      for (problemGen <- Seq((n: Int) => new OneMax(n))) {
-        for (n <- Seq(10, 100, 1000, 10000, 100000, 1000000)) {
-          val problem = problemGen(n)
-          println(s"${problem.name}:")
-          for (algorithm <- Seq(
-            OnePlusOneEA,
-            new OnePlusLambdaLambdaGA(),
-            new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
-          )) {
-            val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
-            val names = algorithm.metrics
-            println(s"  ${algorithm.name}:")
-            for ((stat, name) <- (stats, names).zipped) {
-              println(s"    $name: ${stat.everything}")
-            }
-          }
-        }
-      }
-    } finally {
-      runner.close()
     }
   }
 }
