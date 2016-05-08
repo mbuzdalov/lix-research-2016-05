@@ -39,9 +39,10 @@ class OnePlusLambdaLambdaGA(
       mutation.setProbability(lambda / n)
       crossover.setProbability(1 / lambda)
 
-      val lambdaRange = 0 until lambda.toInt
+      val lambdaInt = lambda.toInt
       var bestFirstChildFitness = -1
-      for (t <- lambdaRange) {
+      var t = 0
+      while (t < lambdaInt) {
         mutation.createRandomBits(t != 0)
         val firstChildFitness = problem(individual, fitness, mutation)
         if (firstChildFitness > bestFirstChildFitness) {
@@ -49,9 +50,11 @@ class OnePlusLambdaLambdaGA(
           bestFirstChildFitness = firstChildFitness
         }
         mutation.undo(individual)
+        t += 1
       }
       var bestSecondChildFitness = -1
-      for (t <- lambdaRange) {
+      t = 0
+      while (t < lambdaInt) {
         crossover.chooseRandomBits(firstChildDiff, firstChildDiffCount)
         val secondChildFitness = problem(individual, fitness, crossover)
         if (secondChildFitness > bestSecondChildFitness) {
@@ -59,6 +62,7 @@ class OnePlusLambdaLambdaGA(
           bestSecondChildFitness = secondChildFitness
         }
         crossover.undo(individual)
+        t += 1
       }
       lambda = if (bestSecondChildFitness > fitness) {
         math.max(minimalLambda, lambda / tuningStrength)
@@ -68,8 +72,10 @@ class OnePlusLambdaLambdaGA(
       maxSeenLambda = math.max(maxSeenLambda, lambda)
       if (bestSecondChildFitness >= fitness) {
         fitness = bestSecondChildFitness
-        for (i <- 0 until secondChildDiffCount) {
+        var i = 0
+        while (i < secondChildDiffCount) {
           individual(secondChildDiff(i)) ^= true
+          i += 1
         }
       }
       evaluations += 2 * lambda.toInt
