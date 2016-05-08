@@ -20,11 +20,11 @@ object Main {
     Locale.setDefault(Locale.US)
     val runner = new Runner
     try {
-      for (problemGen <- Seq(
-        (n: Int) => new OneMax(n),
-        (n: Int) => new Random3CNF(n, (4 * n * math.log(n)).toInt)
+      for ((problemGen, problemSizes) <- Seq(
+        ((n: Int) => new OneMax(n), Seq(10, 100, 1000, 10000, 100000, 1000000)),
+        ((n: Int) => new Random3CNF(n, (4 * n * math.log(n)).toInt), Seq(100, 300, 1000, 3000, 10000, 30000))
       )) {
-        for (n <- Seq(10, 100, 1000, 10000, 100000, 1000000)) {
+        for (n <- problemSizes) {
           val problem = problemGen(n)
           println(s"${problem.name}:")
           for (algorithm <- Seq(
