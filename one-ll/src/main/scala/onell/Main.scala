@@ -6,7 +6,7 @@ import java.util.concurrent.{Callable, Executors, ThreadLocalRandom}
 import java.util.function.Consumer
 
 import onell.algorithms.{OnePlusLambdaLambdaGA, OnePlusOneEA}
-import onell.problems.OneMax
+import onell.problems.{OneMax, Random3CNF}
 
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
@@ -20,7 +20,10 @@ object Main {
     Locale.setDefault(Locale.US)
     val runner = new Runner
     try {
-      for (problemGen <- Seq((n: Int) => new OneMax(n))) {
+      for (problemGen <- Seq(
+        (n: Int) => new OneMax(n),
+        (n: Int) => new Random3CNF(n, (4 * n * math.log(n)).toInt)
+      )) {
         for (n <- Seq(10, 100, 1000, 10000, 100000, 1000000)) {
           val problem = problemGen(n)
           println(s"${problem.name}:")
@@ -60,7 +63,7 @@ object Main {
 
     def runInParallel(algorithm: Algorithm, problem: MutationAwarePseudoBooleanProblem, times: Int): Seq[Seq[Long]] = {
       val threadLocalProblem = new ThreadLocal[MutationAwarePseudoBooleanProblem] {
-        override protected def initialValue(): MutationAwarePseudoBooleanProblem = problem.clone
+        override protected def initialValue(): MutationAwarePseudoBooleanProblem = problem.copy
       }
       val timeStart = System.nanoTime()
       val tasks = Array.fill[Callable[Seq[Long]]](times)(() => algorithm.solve(threadLocalProblem.get()))

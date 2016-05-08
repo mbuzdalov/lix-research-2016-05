@@ -6,7 +6,7 @@ import onell.{Mutation, MutationAwarePseudoBooleanProblem}
   * The OneMax problem implemented as a mutation-aware pseudo-Boolean problem.
   */
 class OneMax(n: Int) extends MutationAwarePseudoBooleanProblem {
-  override def clone: OneMax = this
+  override def copy: OneMax = this
   override def name: String = s"OneMax($n)"
   override def optimumFitness: Int = n
   override def problemSize: Int = n

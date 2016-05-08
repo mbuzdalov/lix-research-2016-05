@@ -4,9 +4,7 @@ package onell
   * An optimization problem which knows how to recompute the answer faster on small mutations.
   */
 trait MutationAwarePseudoBooleanProblem {
-  override def clone: MutationAwarePseudoBooleanProblem = {
-    throw new UnsupportedOperationException("Need to implement clone correctly")
-  }
+  def copy: MutationAwarePseudoBooleanProblem
 
   /**
     * Returns the name of the problem.
