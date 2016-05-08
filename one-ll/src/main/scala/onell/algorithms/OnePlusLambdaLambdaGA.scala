@@ -17,7 +17,7 @@ class OnePlusLambdaLambdaGA(
   private final val tuningStrength4 = math.pow(tuningStrength, 0.25)
 
   override def name: String = s"(1+LL)[$minimalLambdaText;$maximalLambdaText]"
-  override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations")
+  override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda")
   override def solve(problem: MutationAwarePseudoBooleanProblem)(implicit rng: Random): Seq[Long] = {
     val n = problem.problemSize
     val m = problem.optimumFitness
@@ -29,6 +29,7 @@ class OnePlusLambdaLambdaGA(
     var iterations = 1L
     var evaluations = 1L
     var lambda = minimalLambda
+    var maxSeenLambda = lambda
     val firstChildDiff = Array.ofDim[Int](n)
     var firstChildDiffCount = 0
     val secondChildDiff = Array.ofDim[Int](n)
@@ -64,6 +65,7 @@ class OnePlusLambdaLambdaGA(
       } else {
         math.min(math.min(n, maximalLambda), lambda * tuningStrength4)
       }
+      maxSeenLambda = math.max(maxSeenLambda, lambda)
       if (bestSecondChildFitness >= fitness) {
         fitness = bestSecondChildFitness
         for (i <- 0 until secondChildDiffCount) {
@@ -74,6 +76,6 @@ class OnePlusLambdaLambdaGA(
       iterations += 1
     }
 
-    Seq(evaluations, iterations)
+    Seq(evaluations, iterations, maxSeenLambda.toLong)
   }
 }
