@@ -20,25 +20,40 @@ object Main {
     Locale.setDefault(Locale.US)
     val runner = new Runner
     try {
-      for ((problemGen, problemSizes) <- Seq(
-        ((n: Int) => new OneMax(n), Seq(10, 100, 1000, 10000, 100000/*, 1000000*/)),
-        ((n: Int) => new Random3CNF(n, (4 * n * math.log(n)).toInt), Seq(100, 300, 1000, 3000, 10000, 30000, 100000))
-      )) {
-        for (n <- problemSizes) {
-          val problem = problemGen(n)
-          println(s"${problem.name}:")
-          for (algorithm <- Seq(
-            OnePlusOneEA,
-            new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
-          ) ++ (
-            if (n < 10000 || !problem.name.startsWith("Random3CNF")) Seq(new OnePlusLambdaLambdaGA()) else Seq()
-          )) {
-            val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
-            val names = algorithm.metrics
-            println(s"  ${algorithm.name}:")
-            for ((stat, name) <- (stats, names).zipped) {
-              println(s"    $name: ${stat.everything}")
-            }
+      def getOneMax(n: Int)     = new OneMax(n)
+      def getRandom3CNF(n: Int) = new Random3CNF(n, (4 * n * math.log(n)).toInt)
+
+      def getOnePlusOneEA(n: Int) = OnePlusOneEA
+      def getOnePlusLLN(n: Int)   = new OnePlusLambdaLambdaGA()
+      def getOnePlusLLlog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
+
+      val configurations = {
+        Seq(10, 100, 1000, 10000, 100000, 1000000).flatMap(n => Seq(
+          (getOneMax(n), getOnePlusOneEA(n)),
+          (getOneMax(n), getOnePlusLLN(n)),
+          (getOneMax(n), getOnePlusLLlog(n))
+        ))
+      } ++ {
+        Seq(100, 300, 1000, 3000, 10000, 30000, 100000).flatMap(n => Seq(
+          (getRandom3CNF(n), getOnePlusOneEA(n)),
+          (getRandom3CNF(n), getOnePlusLLlog(n))
+        ))
+      } ++ {
+        Seq(100, 300, 1000, 3000).flatMap(n => Seq(
+          (getRandom3CNF(n), getOnePlusLLN(n))
+        ))
+      }
+
+      val byProblem = configurations.groupBy(_._1.name).mapValues(_.sortBy(_._2.name)).toIndexedSeq.sortBy(_._1)
+
+      for ((problemName, configs) <- byProblem) {
+        println(s"$problemName:")
+        for ((problem, algorithm) <- configs) {
+          val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
+          val names = algorithm.metrics
+          println(s"  ${algorithm.name}:")
+          for ((stat, name) <- (stats, names).zipped) {
+            println(s"    $name: ${stat.everything}")
           }
         }
       }
