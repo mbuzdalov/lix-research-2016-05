@@ -9,6 +9,7 @@ import scala.util.Random
   */
 object OnePlusOneEA extends Algorithm {
   override def name: String = "(1+1)-EA"
+  override def revision: String = "rev0"
   override def metrics: Seq[String] = Seq("Fitness evaluations")
   override def solve(problem: MutationAwarePseudoBooleanProblem)(implicit rng: Random): Seq[Double] = {
     val n = problem.problemSize

@@ -13,6 +13,12 @@ trait Algorithm {
   def name: String
 
   /**
+    * Returns the revision string of the algorithm. If one changes this string, all experiments will be re-evaluated.
+    * @return the revision string of the algorithm.
+    */
+  def revision: String
+
+  /**
     * Returns the description of the performance metrics.
     * @return the description of the performance metrics.
     */

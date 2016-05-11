@@ -9,6 +9,7 @@ class OneMax(n: Int) extends MutationAwarePseudoBooleanProblem {
   override def copy: OneMax = this
   override def name: String = s"OneMax($n)"
   override def optimumFitness: Int = n
+  override def optimalSolution: Array[Boolean] = Array.fill(n)(true)
   override def problemSize: Int = n
   override def apply(solution: Array[Boolean]): Int = (0 until n).count(solution)
   override def apply(solution: Array[Boolean], originalFitness: Int, mutation: Mutation): Int = {

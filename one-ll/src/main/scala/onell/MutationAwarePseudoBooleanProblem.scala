@@ -25,6 +25,12 @@ trait MutationAwarePseudoBooleanProblem {
   def problemSize: Int
 
   /**
+    * Returns the problem's optimal solution for tracking purposes.
+    * @return the problem's optimal solution.
+    */
+  def optimalSolution: Array[Boolean]
+
+  /**
     * Evaluates the fitness value of the given candidate solution.
     * @param solution the candidate solution.
     * @return the fitness of the given solution.

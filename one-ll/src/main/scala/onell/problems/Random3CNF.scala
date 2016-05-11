@@ -52,6 +52,7 @@ class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseu
   }
   override def name: String = s"Random3CNF($n,$m)"
   override def optimumFitness: Int = m
+  override def optimalSolution: Array[Boolean] = assignment.clone()
   override def problemSize: Int = n
 
   override def apply(solution: Array[Boolean]): Int = (0 until m).count(i => isOk(i, solution))

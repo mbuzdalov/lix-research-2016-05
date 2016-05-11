@@ -21,7 +21,7 @@ object Main {
     val runner = new Runner
     try {
       for ((problemGen, problemSizes) <- Seq(
-        ((n: Int) => new OneMax(n), Seq(10, 100, 1000, 10000, 100000, 1000000)),
+        ((n: Int) => new OneMax(n), Seq(10, 100, 1000, 10000, 100000/*, 1000000*/)),
         ((n: Int) => new Random3CNF(n, (4 * n * math.log(n)).toInt), Seq(100, 300, 1000, 3000, 10000, 30000, 100000))
       )) {
         for (n <- problemSizes) {
@@ -85,23 +85,26 @@ object Main {
       val previousResults = if (Files.exists(path)) {
         val lines = Files.lines(path)
         val okResults = Seq.newBuilder[Seq[Double]]
+        var revisionString: String = null
         lines.forEach((t: String) => try {
-          val values = t.split(" ").filter(_.nonEmpty).map(_.toDouble)
-          if (values.length == metricCount) {
-            okResults += values.toIndexedSeq
+          if (revisionString == null) {
+            revisionString = t
           } else {
-            println(s"The number of entries in the string '$t' is wrong: expected $metricCount found ${values.length}")
+            val values = t.split(" ").filter(_.nonEmpty).map(_.toDouble)
+            if (values.length == metricCount) {
+              okResults += values.toIndexedSeq
+            }
           }
         } catch {
           case e: Throwable => println(s"An exception of type ${e.getClass} thrown when processing string '$t'")
         })
-        okResults.result()
+        if (revisionString != algorithm.revision) Seq() else okResults.result()
       } else Seq()
       if (previousResults.size < times) {
         val result = previousResults ++ runInParallel(algorithm, problem, times - previousResults.size)
         val resultSorted = result.sortBy(_(0))
         Files.createDirectories(path.getParent)
-        Files.write(path, resultSorted.map(_.mkString(" ")).asJava)
+        Files.write(path, (algorithm.revision +: resultSorted.map(_.mkString(" "))).asJava)
         resultSorted
       } else {
         previousResults
