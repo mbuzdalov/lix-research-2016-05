@@ -29,8 +29,9 @@ object Main {
           println(s"${problem.name}:")
           for (algorithm <- Seq(
             OnePlusOneEA,
-            new OnePlusLambdaLambdaGA(),
             new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
+          ) ++ (
+            if (n < 10000 || !problem.name.startsWith("Random3CNF")) Seq(new OnePlusLambdaLambdaGA()) else Seq()
           )) {
             val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
             val names = algorithm.metrics
@@ -61,12 +62,12 @@ object Main {
       service.shutdown()
     }
 
-    def runInParallel(algorithm: Algorithm, problem: MutationAwarePseudoBooleanProblem, times: Int): Seq[Seq[Long]] = {
+    def runInParallel(algorithm: Algorithm, problem: MutationAwarePseudoBooleanProblem, times: Int): Seq[Seq[Double]] = {
       val threadLocalProblem = new ThreadLocal[MutationAwarePseudoBooleanProblem] {
         override protected def initialValue(): MutationAwarePseudoBooleanProblem = problem.copy
       }
       val timeStart = System.nanoTime()
-      val tasks = Array.fill[Callable[Seq[Long]]](times)(() => algorithm.solve(threadLocalProblem.get()))
+      val tasks = Array.fill[Callable[Seq[Double]]](times)(() => algorithm.solve(threadLocalProblem.get()))
       val rv = service.invokeAll(Arrays.asList(tasks :_*)).asScala.map(_.get()).toIndexedSeq
       val timeDone = (System.nanoTime() - timeStart) / 1e9
       println(s"  [$times runs done in $timeDone s]")
@@ -78,18 +79,18 @@ object Main {
       algorithm: Algorithm,
       problem: MutationAwarePseudoBooleanProblem,
       times: Int
-    ): Seq[Seq[Long]] = {
+    ): Seq[Seq[Double]] = {
       val path = Paths.get(cacheRoot, algorithm.name, problem.name)
       val metricCount = algorithm.metrics.size
       val previousResults = if (Files.exists(path)) {
         val lines = Files.lines(path)
-        val okResults = Seq.newBuilder[Seq[Long]]
+        val okResults = Seq.newBuilder[Seq[Double]]
         lines.forEach((t: String) => try {
-          val longs = t.split(" ").filter(_.nonEmpty).map(_.toLong)
-          if (longs.length == metricCount) {
-            okResults += longs.toIndexedSeq
+          val values = t.split(" ").filter(_.nonEmpty).map(_.toDouble)
+          if (values.length == metricCount) {
+            okResults += values.toIndexedSeq
           } else {
-            println(s"The number of entries in the string '$t' is wrong: expected $metricCount found ${longs.length}")
+            println(s"The number of entries in the string '$t' is wrong: expected $metricCount found ${values.length}")
           }
         } catch {
           case e: Throwable => println(s"An exception of type ${e.getClass} thrown when processing string '$t'")
@@ -108,7 +109,7 @@ object Main {
     }
   }
 
-  class Statistics(data: Seq[Long]) {
+  class Statistics(data: Seq[Double]) {
     val sortedData = data.toIndexedSeq.sorted
 
     def percentile(ratio: Double): Double = {
@@ -122,14 +123,14 @@ object Main {
       }
     }
 
-    lazy val min: Long = sortedData.head
-    lazy val max: Long = sortedData.last
+    lazy val min: Double = sortedData.head
+    lazy val max: Double = sortedData.last
     lazy val std: Double = {
       val avg = mean
       val sumSqDiff = sortedData.view.map(v => (v - avg) * (v - avg)).sum
       math.sqrt(sumSqDiff  / (sortedData.size - 1))
     }
-    lazy val mean: Double = sortedData.sum.toDouble / sortedData.size
+    lazy val mean: Double = sortedData.sum / sortedData.size
     lazy val median: Double = percentile(0.5)
     lazy val interQuartile: Double = percentile(0.75) - percentile(0.25)
 

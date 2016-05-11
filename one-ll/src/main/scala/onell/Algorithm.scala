@@ -25,5 +25,5 @@ trait Algorithm {
     * @param rng the random number generator to use.
     * @return the performance metrics.
     */
-  def solve(problem: MutationAwarePseudoBooleanProblem)(implicit rng: Random): Seq[Long]
+  def solve(problem: MutationAwarePseudoBooleanProblem)(implicit rng: Random): Seq[Double]
 }
