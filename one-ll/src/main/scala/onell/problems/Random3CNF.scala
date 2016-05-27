@@ -1,14 +1,14 @@
 package onell.problems
 
+import java.util.Random
+
 import onell.util.MutableIntSet
 import onell.{Mutation, MutationAwarePseudoBooleanProblem}
-
-import scala.util.Random
 
 /**
   * A random planted-solution 3-CNF-SAT instance.
   */
-class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseudoBooleanProblem with Cloneable {
+class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseudoBooleanProblem[Int] {
   private final val assignment = Array.fill(n)(rng.nextBoolean())
   private final val clauseVar = Array.ofDim[Int](3 * m)
   private final val clauseVal = Array.ofDim[Boolean](3 * m)
@@ -45,14 +45,14 @@ class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseu
 
   private var usedClauses = new MutableIntSet(m)
 
-  override def copy: Random3CNF = {
-    val res = clone.asInstanceOf[Random3CNF]
+  override def copy = {
+    val res = clone.asInstanceOf[this.type]
     res.usedClauses = new MutableIntSet(m)
     res
   }
   override def name: String = s"Random3CNF($n,$m)"
-  override def optimumFitness: Int = m
-  override def optimalSolution: Array[Boolean] = assignment.clone()
+  override def isOptimumFitness(fitness: Int): Boolean = fitness == m
+  override def numberOfOptimumFitnessValues: Int = 1
   override def problemSize: Int = n
 
   override def apply(solution: Array[Boolean]): Int = (0 until m).count(i => isOk(i, solution))

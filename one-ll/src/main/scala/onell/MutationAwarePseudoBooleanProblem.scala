@@ -3,8 +3,8 @@ package onell
 /**
   * An optimization problem which knows how to recompute the answer faster on small mutations.
   */
-trait MutationAwarePseudoBooleanProblem {
-  def copy: MutationAwarePseudoBooleanProblem
+trait MutationAwarePseudoBooleanProblem[F] {
+  def copy: this.type
 
   /**
     * Returns the name of the problem.
@@ -13,10 +13,16 @@ trait MutationAwarePseudoBooleanProblem {
   def name: String
 
   /**
-    * Returns the fitness value which corresponds to the problem's optimum.
+    * Checks if the fitness value corresponds to the problem's optimum.
     * @return the optimum fitness value.
     */
-  def optimumFitness: Int
+  def isOptimumFitness(fitness: F): Boolean
+
+  /**
+    * Returns the number of different optimum fitness values.
+    * @return the number of different optimum fitness values.
+    */
+  def numberOfOptimumFitnessValues: Int
 
   /**
     * Returns the number of bits in the candidate solution to the problem.
@@ -25,17 +31,11 @@ trait MutationAwarePseudoBooleanProblem {
   def problemSize: Int
 
   /**
-    * Returns the problem's optimal solution for tracking purposes.
-    * @return the problem's optimal solution.
-    */
-  def optimalSolution: Array[Boolean]
-
-  /**
     * Evaluates the fitness value of the given candidate solution.
     * @param solution the candidate solution.
     * @return the fitness of the given solution.
     */
-  def apply(solution: Array[Boolean]): Int
+  def apply(solution: Array[Boolean]): F
 
   /**
     * Evaluates the fitness value of the given candidate solution after applying the given mutation.
@@ -45,5 +45,5 @@ trait MutationAwarePseudoBooleanProblem {
     * @param mutation the mutation to be applied.
     * @return the fitness after applying the mutation.
     */
-  def apply(solution: Array[Boolean], originalFitness: Int, mutation: Mutation): Int
+  def apply(solution: Array[Boolean], originalFitness: F, mutation: Mutation): F
 }

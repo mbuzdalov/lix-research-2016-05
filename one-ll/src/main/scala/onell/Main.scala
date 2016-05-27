@@ -1,16 +1,15 @@
 package onell
 
 import java.nio.file.{Files, Paths}
-import java.util.{Arrays, Locale}
 import java.util.concurrent.{Callable, Executors, ThreadLocalRandom}
 import java.util.function.Consumer
+import java.util.{Arrays, Locale, Random}
 
 import onell.algorithms.{OnePlusLambdaLambdaGA, OnePlusOneEA}
 import onell.problems.{OneMax, Random3CNF}
 
-import scala.language.implicitConversions
 import scala.collection.JavaConverters._
-import scala.util.Random
+import scala.language.implicitConversions
 
 /**
   * The main class which runs experiments.
@@ -68,7 +67,7 @@ object Main {
   implicit def functionToConsumer[T](function: T => Any): Consumer[T] = new Consumer[T] {
     override def accept(t: T): Unit = function(t)
   }
-  implicit val rng = new Random(ThreadLocalRandom.current())
+  implicit def rng: Random = ThreadLocalRandom.current()
 
   class Runner {
     val service = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors())
@@ -77,9 +76,9 @@ object Main {
       service.shutdown()
     }
 
-    def runInParallel(algorithm: Algorithm, problem: MutationAwarePseudoBooleanProblem, times: Int): Seq[Seq[Double]] = {
-      val threadLocalProblem = new ThreadLocal[MutationAwarePseudoBooleanProblem] {
-        override protected def initialValue(): MutationAwarePseudoBooleanProblem = problem.copy
+    def runInParallel[F](algorithm: Algorithm[F], problem: MutationAwarePseudoBooleanProblem[F], times: Int): Seq[Seq[Double]] = {
+      val threadLocalProblem = new ThreadLocal[MutationAwarePseudoBooleanProblem[F]] {
+        override protected def initialValue(): MutationAwarePseudoBooleanProblem[F] = problem.copy
       }
       val timeStart = System.nanoTime()
       val tasks = Array.fill[Callable[Seq[Double]]](times)(() => algorithm.solve(threadLocalProblem.get()))
@@ -89,10 +88,10 @@ object Main {
       rv
     }
 
-    def compute(
+    def compute[F](
       cacheRoot: String,
-      algorithm: Algorithm,
-      problem: MutationAwarePseudoBooleanProblem,
+      algorithm: Algorithm[F],
+      problem: MutationAwarePseudoBooleanProblem[F],
       times: Int
     ): Seq[Seq[Double]] = {
       val path = Paths.get(cacheRoot, algorithm.name, problem.name)

@@ -1,8 +1,8 @@
 package onell
 
-import onell.util.{IntSet, MutableIntSet}
+import java.util.Random
 
-import scala.util.Random
+import onell.util.{IntSet, MutableIntSet}
 
 /**
   * A mutation operator which generates mutation indices

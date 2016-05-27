@@ -1,8 +1,8 @@
 package onell.algorithms
 
-import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
+import java.util.Random
 
-import scala.util.Random
+import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
 
 /**
   * The (1+(L,L))-GA by Doerr, Doerr, Ebel.
@@ -12,24 +12,21 @@ class OnePlusLambdaLambdaGA(
   minimalLambdaText: String = "1",
   maximalLambda: Double = Double.PositiveInfinity,
   maximalLambdaText: String = "n"
-) extends Algorithm {
+) extends Algorithm[Int] {
   private final val tuningStrength = 1.5
   private final val tuningStrength4 = math.pow(tuningStrength, 0.25)
 
-  override def revision: String = "dump lambdas"
+  override def revision: String = "rev1 +randomfix"
 
   override def name: String = s"(1+LL)[$minimalLambdaText;$maximalLambdaText]"
-  override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda", "Divergence of (lambda / sqrt(n/d))")
-  override def solve(problem: MutationAwarePseudoBooleanProblem)(implicit rng: Random): Seq[Double] = {
+  override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda")
+  override def solve(problem: MutationAwarePseudoBooleanProblem[Int])(implicit rng: Random): Seq[Double] = {
     val n = problem.problemSize
-    val m = problem.optimumFitness
     val mutation = new Mutation(n, minimalLambda / n)
     val crossover = new Mutation(n, 1 / minimalLambda)
 
     val individual = Array.fill(n)(rng.nextBoolean())
-    val optimum = problem.optimalSolution
     var fitness = problem(individual)
-    var structuralDistance = (individual, optimum).zipped.count(p => p._1 != p._2)
     var iterations = 1L
     var evaluations = 1L
     var lambda = minimalLambda
@@ -39,14 +36,9 @@ class OnePlusLambdaLambdaGA(
     val secondChildDiff = Array.ofDim[Int](n)
     var secondChildDiffCount = 0
 
-    var sumLambdaRatios = 0.0
-
-    while (fitness < m) {
-      val bestPossibleLambda = math.min(math.sqrt(n.toDouble / structuralDistance), maximalLambda)
+    while (!problem.isOptimumFitness(fitness)) {
       mutation.setProbability(lambda / n)
       crossover.setProbability(1 / lambda)
-      val ratio = lambda / bestPossibleLambda
-      sumLambdaRatios += math.max(ratio, 1.0 / ratio)
 
       val lambdaInt = lambda.toInt
       var bestFirstChildFitness = -1
@@ -83,11 +75,6 @@ class OnePlusLambdaLambdaGA(
         fitness = bestSecondChildFitness
         var i = 0
         while (i < secondChildDiffCount) {
-          if (individual(secondChildDiff(i)) == optimum(secondChildDiff(i))) {
-            structuralDistance += 1
-          } else {
-            structuralDistance -= 1
-          }
           individual(secondChildDiff(i)) ^= true
           i += 1
         }
@@ -96,6 +83,6 @@ class OnePlusLambdaLambdaGA(
       iterations += 1
     }
 
-    Seq(evaluations, iterations, maxSeenLambda, sumLambdaRatios / iterations)
+    Seq(evaluations, iterations, maxSeenLambda)
   }
 }

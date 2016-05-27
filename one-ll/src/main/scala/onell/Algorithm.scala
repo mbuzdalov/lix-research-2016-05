@@ -1,11 +1,11 @@
 package onell
 
-import scala.util.Random
+import java.util.Random
 
 /**
   * A trait for algorithms solving pseudo-Boolean mutation-aware problems.
   */
-trait Algorithm {
+trait Algorithm[F] {
   /**
     * Returns the name of the algorithm.
     * @return the name of the algorithm.
@@ -31,5 +31,5 @@ trait Algorithm {
     * @param rng the random number generator to use.
     * @return the performance metrics.
     */
-  def solve(problem: MutationAwarePseudoBooleanProblem)(implicit rng: Random): Seq[Double]
+  def solve(problem: MutationAwarePseudoBooleanProblem[F])(implicit rng: Random): Seq[Double]
 }

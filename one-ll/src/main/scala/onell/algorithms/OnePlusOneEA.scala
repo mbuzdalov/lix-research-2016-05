@@ -1,26 +1,25 @@
 package onell.algorithms
 
-import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
+import java.util.Random
 
-import scala.util.Random
+import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
 
 /**
   * The (1+1)-EA algorithm.
   */
-object OnePlusOneEA extends Algorithm {
+object OnePlusOneEA extends Algorithm[Int] {
   override def name: String = "(1+1)-EA"
-  override def revision: String = "rev0"
+  override def revision: String = "rev0 +randomfix"
   override def metrics: Seq[String] = Seq("Fitness evaluations")
-  override def solve(problem: MutationAwarePseudoBooleanProblem)(implicit rng: Random): Seq[Double] = {
+  override def solve(problem: MutationAwarePseudoBooleanProblem[Int])(implicit rng: Random): Seq[Double] = {
     val n = problem.problemSize
-    val m = problem.optimumFitness
     val mutation = new Mutation(n, 1.0 / n)
 
     val individual = Array.fill(n)(rng.nextBoolean())
     var evaluations = 1L
     var fitness = problem(individual)
 
-    while (fitness < m) {
+    while (!problem.isOptimumFitness(fitness)) {
       mutation.createRandomBits(false)
       val newFitness = problem(individual, fitness, mutation)
       evaluations += 1
