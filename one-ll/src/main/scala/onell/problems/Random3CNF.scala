@@ -8,7 +8,7 @@ import onell.{Mutation, MutationAwarePseudoBooleanProblem}
 /**
   * A random planted-solution 3-CNF-SAT instance.
   */
-class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseudoBooleanProblem[Int] {
+class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseudoBooleanProblem[Int] with Cloneable {
   private final val assignment = Array.fill(n)(rng.nextBoolean())
   private final val clauseVar = Array.ofDim[Int](3 * m)
   private final val clauseVal = Array.ofDim[Boolean](3 * m)
