@@ -5,8 +5,8 @@ import java.util.concurrent.{Callable, Executors, ThreadLocalRandom}
 import java.util.function.Consumer
 import java.util.{Arrays, Locale, Random}
 
-import onell.algorithms.{OnePlusLambdaLambdaGA, OnePlusOneEA}
-import onell.problems.{OneMax, Random3CNF}
+import onell.algorithms.{GlobalSEMO, OnePlusLambdaLambdaGA, OnePlusOneEA}
+import onell.problems.{LeadingOnesTrailingZeros, OneMax, OneZeroMax, Random3CNF}
 
 import scala.collection.JavaConverters._
 import scala.language.implicitConversions
@@ -26,28 +26,45 @@ object Main {
       def getOnePlusLLN(n: Int)   = new OnePlusLambdaLambdaGA()
       def getOnePlusLLlog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
 
-      val configurations = {
+      val oneLLConfigurations = {
         Seq(10, 100, 1000, 10000, 100000, 1000000).flatMap(n => Seq(
-          (getOneMax(n), getOnePlusOneEA(n)),
-          (getOneMax(n), getOnePlusLLN(n)),
-          (getOneMax(n), getOnePlusLLlog(n))
+          Config(getOneMax(n), getOnePlusOneEA(n)),
+          Config(getOneMax(n), getOnePlusLLN(n)),
+          Config(getOneMax(n), getOnePlusLLlog(n))
         ))
       } ++ {
         Seq(100, 300, 1000, 3000, 10000, 30000, 100000).flatMap(n => Seq(
-          (getRandom3CNF(n), getOnePlusOneEA(n)),
-          (getRandom3CNF(n), getOnePlusLLlog(n))
+          Config(getRandom3CNF(n), getOnePlusOneEA(n)),
+          Config(getRandom3CNF(n), getOnePlusLLlog(n))
         ))
       } ++ {
         Seq(100, 300, 1000, 3000).flatMap(n => Seq(
-          (getRandom3CNF(n), getOnePlusLLN(n))
+          Config(getRandom3CNF(n), getOnePlusLLN(n))
         ))
       }
 
-      val byProblem = configurations.groupBy(_._1.name).mapValues(_.sortBy(_._2.name)).toIndexedSeq.sortBy(_._1)
+      def getSimpleSEMO = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Uniform
+      def getCrowdingSEMO = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Crowding
+      def getFertilitySEMO = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Fertility
 
-      for ((problemName, configs) <- byProblem) {
+      val semoConfigurations = Seq(100, 200, 300, 400).flatMap(n => Seq(
+        Config(new OneZeroMax(n), getSimpleSEMO),
+        Config(new OneZeroMax(n), getCrowdingSEMO),
+        Config(new OneZeroMax(n), getFertilitySEMO),
+        Config(new LeadingOnesTrailingZeros(n), getSimpleSEMO),
+        Config(new LeadingOnesTrailingZeros(n), getCrowdingSEMO),
+        Config(new LeadingOnesTrailingZeros(n), getFertilitySEMO)
+      ))
+
+      def byProblem(configs: Seq[Configuration]) = configs.groupBy(_.problem.name).mapValues(_.sortBy(_.algorithm.name)).toIndexedSeq.sortBy(_._1)
+      val oneLLByProblem = byProblem(oneLLConfigurations)
+      val semoByProblem = byProblem(semoConfigurations)
+
+      for ((problemName, configs) <- semoByProblem) {
         println(s"$problemName:")
-        for ((problem, algorithm) <- configs) {
+        for (config <- configs) {
+          val algorithm = config.algorithm
+          val problem = config.problem
           val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
           val names = algorithm.metrics
           println(s"  ${algorithm.name}:")
@@ -59,6 +76,16 @@ object Main {
     } finally {
       runner.close()
     }
+  }
+
+  abstract class Configuration {
+    type Fitness
+    def problem: MutationAwarePseudoBooleanProblem[Fitness]
+    def algorithm: Algorithm[Fitness]
+  }
+
+  case class Config[F](problem: MutationAwarePseudoBooleanProblem[F], algorithm: Algorithm[F]) extends Configuration {
+    override type Fitness = F
   }
 
   implicit def functionToCallable[T](function: () => T): Callable[T] = new Callable[T] {
