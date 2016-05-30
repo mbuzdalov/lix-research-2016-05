@@ -10,20 +10,16 @@ import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
   */
 abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
   override def name: String = "GlobalSEMO"
-  override def metrics: Seq[String] = Seq("Fitness evaluations")
-  override def revision: String = "rev0"
+  override def metrics: Seq[String] = Seq("Fitness evaluations", "Front hitting time", "Front hitting population size")
+  override def revision: String = "rev2"
 
   override def solve(problem: MutationAwarePseudoBooleanProblem[(Int, Int)])(implicit rng: Random): Seq[Double] = {
     val mutation = new Mutation(problem.problemSize, 1.0 / problem.problemSize)
-    def work(population: Array[Individual], iterationsDone: Long): Long = {
-//      // TODO: Debug: check things are increasing and non-dominating. Remove it as it is quite slow
-//      for (i <- 1 until population.length) {
-//        assert(population(i - 1).fitness._1 < population(i).fitness._1)
-//        assert(population(i - 1).fitness._2 > population(i).fitness._2)
-//      }
+    def work(population: Array[Individual], iterationsDone: Long, frontHitting: Option[(Long, Int)]): (Long, Long, Int) = {
       if (population.length == problem.numberOfOptimumFitnessValues && population.forall(i => problem.isOptimumFitness(i.fitness))) {
         // Found the entire front
-        iterationsDone
+        val (frontHittingTime, hittingPopulationSize) = frontHitting.get
+        (iterationsDone, frontHittingTime, hittingPopulationSize)
       } else {
         val index = select(population, rng)
         mutation.createRandomBits(false)
@@ -35,16 +31,21 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
           // The new one is worse than its parent, revert and apply failure to the parent
           mutation.mutate(theArray)
           population(index) = population(index).applyFailure
-          work(population, iterationsDone + 1)
+          work(population, iterationsDone + 1, frontHitting)
         } else {
           // The new one is not worse than its parent.
+          val newFrontHitting = if (frontHitting.isDefined) frontHitting else {
+            if (problem.isOptimumFitness(newFitness)) {
+              Some(iterationsDone, population.length)
+            } else None
+          }
           // First check that it is not worse than others
           val notBad = population.forall(i => i.fitness != newFitness && !dominates(problem.problemSize, i.fitness, newFitness))
           if (!notBad) {
             // Found an individual which strictly dominates us, revert and apply failure to the parent
             mutation.mutate(theArray)
             population(index) = population(index).applyFailure
-            work(population, iterationsDone + 1)
+            work(population, iterationsDone + 1, newFrontHitting)
           } else {
             val equalIndex = population.indexWhere(i => !(i.bits eq theArray) && i.fitness == newFitness)
             if (equalIndex >= 0) {
@@ -56,7 +57,7 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
               population(equalIndex) = Individual(tmpArray, newFitness, 0)
               mutation.mutate(theArray)
               population(index) = population(index).applySuccess
-              work(population, iterationsDone + 1)
+              work(population, iterationsDone + 1, newFrontHitting)
             } else {
               // The general stuff. First, split off the new individual and revert the parent
               val newIndividual = Individual(theArray.clone(), newFitness, 0)
@@ -77,15 +78,17 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
                 }
                 i += 1
               }
-              work(builder.result(), iterationsDone + 1)
+              work(builder.result(), iterationsDone + 1, newFrontHitting)
             }
           }
         }
       }
     }
     val initIndividual = Array.fill(problem.problemSize)(rng.nextBoolean())
-    val iterations = work(Array(Individual(initIndividual, problem.apply(initIndividual), 0)), 1)
-    Seq(iterations.toDouble)
+    val (iterations, frontHittingTime, hittingPopulationSize) = work(
+      Array(Individual(initIndividual, problem.apply(initIndividual), 0)), 1, None
+    )
+    Seq(iterations.toDouble, frontHittingTime.toDouble, hittingPopulationSize.toDouble)
   }
 
   private def dominates(size: Int, master: (Int, Int), slave: (Int, Int)): Boolean = {
@@ -112,12 +115,18 @@ object GlobalSEMO {
       override def name: String = super.name + "[selection=fertility]"
       override def select(population: Array[Individual], rng: Random) = {
         var rv = 0
-        for (i <- 1 until population.length) {
+        var builder = Array.newBuilder[Int]
+        for (i <- 0 until population.length) {
           if (population(i).failures < population(rv).failures) {
             rv = i
+            builder.clear()
+          }
+          if (population(i).failures == population(rv).failures) {
+            builder += i
           }
         }
-        rv
+        val allIndices = builder.result()
+        allIndices(rng.nextInt(allIndices.length))
       }
     }
 
@@ -130,7 +139,7 @@ object GlobalSEMO {
         if (selectionProbability < extremeProbability) {
           if (rng.nextBoolean()) 0 else population.length - 1
         } else if ((selectionProbability - extremeProbability) < maxCrowdingProbability) {
-          var best = 0
+          val best = Array.newBuilder[Int]
           var bestCrowding = 0.0
           val globalDX: Double = population.head.fitness._1 - population.last.fitness._1
           val globalDY: Double = population.last.fitness._2 - population.head.fitness._2
@@ -140,12 +149,18 @@ object GlobalSEMO {
             val crowding = diffX / globalDX + diffY / globalDY
             if (crowding > bestCrowding) {
               bestCrowding = crowding
-              best = i
+              best.clear()
+            }
+            if (crowding == bestCrowding) {
+              best += i
             }
           }
-          if (best == 0) {
+          if (bestCrowding == 0) {
             if (rng.nextBoolean()) 0 else population.length - 1
-          } else best
+          } else {
+            val array = best.result()
+            array(rng.nextInt(array.length))
+          }
         } else {
           rng.nextInt(population.length)
         }

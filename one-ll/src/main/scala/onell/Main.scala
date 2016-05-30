@@ -47,7 +47,7 @@ object Main {
       def getCrowdingSEMO = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Crowding
       def getFertilitySEMO = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Fertility
 
-      val semoConfigurations = Seq(100, 200, 300, 400).flatMap(n => Seq(
+      val semoConfigurations = Seq(100, 200, 300, 400, 500, 1000).flatMap(n => Seq(
         Config(new OneZeroMax(n), getSimpleSEMO),
         Config(new OneZeroMax(n), getCrowdingSEMO),
         Config(new OneZeroMax(n), getFertilitySEMO),
@@ -60,7 +60,7 @@ object Main {
       val oneLLByProblem = byProblem(oneLLConfigurations)
       val semoByProblem = byProblem(semoConfigurations)
 
-      for ((problemName, configs) <- semoByProblem) {
+      for ((problemName, configs) <- oneLLByProblem ++ semoByProblem) {
         println(s"$problemName:")
         for (config <- configs) {
           val algorithm = config.algorithm
