@@ -48,7 +48,7 @@ object LOTZInitModel {
     for (n <- sizes; t <- sizes) {
       var max = 0
       var sum = 0L
-      var runs = 100
+      val runs = 100
       for (r <- 1 to runs) {
         val result = iteration(CartesianTree((n / 2, 0)), new CartesianTree.SplitResult[(Int, Int)], n, 1, 0, t)
         max = math.max(max, result)
