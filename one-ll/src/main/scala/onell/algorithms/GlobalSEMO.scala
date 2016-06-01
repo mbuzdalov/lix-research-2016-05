@@ -11,7 +11,29 @@ import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
 abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
   override def name: String = "GlobalSEMO"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Front hitting time", "Front hitting population size")
-  override def revision: String = "rev6"
+  override def revision: String = "rev7"
+
+  sealed trait BinarySearchResult {
+    def insertionPoint: Int
+  }
+  final case class FoundExact(insertionPoint: Int) extends BinarySearchResult
+  final case class FoundBetween(insertionPoint: Int) extends BinarySearchResult
+
+  private def binarySearch(population: Array[Individual], fitness: (Int, Int)): BinarySearchResult = {
+    def run(left: Int, right: Int): BinarySearchResult = {
+      if (left + 1 == right) {
+        if (population(left).fitness == fitness) FoundExact(left) else FoundBetween(right)
+      } else {
+        val mid = (left + right) >>> 1
+        if (population(mid).fitness._1 <= fitness._1) run(mid, right) else run(left, mid)
+      }
+    }
+    if (population.length == 0 || fitness._1 < population(0).fitness._1) {
+      FoundBetween(0)
+    } else {
+      run(0, population.length)
+    }
+  }
 
   override def solve(problem: MutationAwarePseudoBooleanProblem[(Int, Int)])(implicit rng: Random): Seq[Double] = {
     val mutation = new Mutation(problem.problemSize, 1.0 / problem.problemSize)
@@ -44,15 +66,24 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
             // In this case, the mutation is left applied, but no other stuff changes.
             work(population, iterationsDone + 1, frontHitting)
           } else {
+            val location = binarySearch(population, newFitness)
             // First check that it is not worse than others
-            val notBad = population.forall(i => i.fitness == newFitness || !dominates(problem.problemSize, i.fitness, newFitness))
+            val notBad = location match {
+              case FoundExact(i) => true
+              case FoundBetween(i) =>
+                (i == 0 || !dominates(problem.problemSize, population(i - 1).fitness, newFitness)) &&
+                (i == population.length || !dominates(problem.problemSize, population(i).fitness, newFitness))
+            }
             if (!notBad) {
               // Found an individual which strictly dominates us, revert and apply failure to the parent
               mutation.mutate(theArray)
               population(index) = population(index).applyFailure
               work(population, iterationsDone + 1, newFrontHitting)
             } else {
-              val equalIndex = population.indexWhere(i => !(i.bits eq theArray) && i.fitness == newFitness)
+              val equalIndex = location match {
+                case FoundExact(i) => i
+                case FoundBetween(_) => -1
+              }
               if (equalIndex >= 0) {
                 // If someone's fitness equals the new fitness,
                 // silently replace it with the new one and apply NEITHER success NOR failure to the parent.
