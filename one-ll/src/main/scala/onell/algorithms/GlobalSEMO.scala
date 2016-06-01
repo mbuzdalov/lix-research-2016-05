@@ -11,7 +11,7 @@ import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
 abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
   override def name: String = "GlobalSEMO"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Front hitting time", "Front hitting population size")
-  override def revision: String = "rev2"
+  override def revision: String = "rev6"
 
   override def solve(problem: MutationAwarePseudoBooleanProblem[(Int, Int)])(implicit rng: Random): Seq[Double] = {
     val mutation = new Mutation(problem.problemSize, 1.0 / problem.problemSize)
@@ -27,7 +27,7 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
         val theArray = population(index).bits
         val oldFitness = population(index).fitness
         val newFitness = problem.apply(theArray, oldFitness, mutation)
-        if (dominates(problem.problemSize, oldFitness, newFitness)) {
+        if (oldFitness != newFitness && dominates(problem.problemSize, oldFitness, newFitness)) {
           // The new one is worse than its parent, revert and apply failure to the parent
           mutation.mutate(theArray)
           population(index) = population(index).applyFailure
@@ -39,54 +39,62 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
               Some(iterationsDone, population.length)
             } else None
           }
-          // First check that it is not worse than others
-          val notBad = population.forall(i => i.fitness != newFitness && !dominates(problem.problemSize, i.fitness, newFitness))
-          if (!notBad) {
-            // Found an individual which strictly dominates us, revert and apply failure to the parent
-            mutation.mutate(theArray)
-            population(index) = population(index).applyFailure
-            work(population, iterationsDone + 1, newFrontHitting)
+          if (oldFitness == newFitness) {
+            // Special case when we are trying to replace the parent.
+            // In this case, the mutation is left applied, but no other stuff changes.
+            work(population, iterationsDone + 1, frontHitting)
           } else {
-            val equalIndex = population.indexWhere(i => !(i.bits eq theArray) && i.fitness == newFitness)
-            if (equalIndex >= 0) {
-              // If someone's fitness equals the new fitness,
-              // silently replace it with the new one and apply success to the parent.
-              // It should be safe to reuse the replaced individual's bit array.
-              val tmpArray = population(equalIndex).bits
-              System.arraycopy(theArray, 0, tmpArray, 0, theArray.length)
-              population(equalIndex) = Individual(tmpArray, newFitness, 0)
+            // First check that it is not worse than others
+            val notBad = population.forall(i => i.fitness == newFitness || !dominates(problem.problemSize, i.fitness, newFitness))
+            if (!notBad) {
+              // Found an individual which strictly dominates us, revert and apply failure to the parent
               mutation.mutate(theArray)
-              population(index) = population(index).applySuccess
+              population(index) = population(index).applyFailure
               work(population, iterationsDone + 1, newFrontHitting)
             } else {
-              // The general stuff. First, split off the new individual and revert the parent
-              val newIndividual = Individual(theArray.clone(), newFitness, 0)
-              mutation.mutate(theArray)
-              population(index) = population(index).applySuccess
-              val builder = Array.newBuilder[Individual]
-              var i = 0
-              while (i < population.length && population(i).fitness._1 < newFitness._1) {
-                if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
-                  builder += population(i)
+              val equalIndex = population.indexWhere(i => !(i.bits eq theArray) && i.fitness == newFitness)
+              if (equalIndex >= 0) {
+                // If someone's fitness equals the new fitness,
+                // silently replace it with the new one and apply NEITHER success NOR failure to the parent.
+                // It should be safe to reuse the replaced individual's bit array.
+                val tmpArray = population(equalIndex).bits
+                System.arraycopy(theArray, 0, tmpArray, 0, theArray.length)
+                population(equalIndex) = Individual(tmpArray, newFitness, population(equalIndex).failures)
+                mutation.mutate(theArray)
+                work(population, iterationsDone + 1, newFrontHitting)
+              } else {
+                // The general stuff. First, split off the new individual and revert the parent
+                val newIndividual = Individual(theArray.clone(), newFitness, 0)
+                mutation.mutate(theArray)
+                population(index) = population(index).applySuccess
+                val builder = Array.newBuilder[Individual]
+                var i = 0
+                while (i < population.length && population(i).fitness._1 < newFitness._1) {
+                  if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
+                    builder += population(i)
+                  }
+                  i += 1
                 }
-                i += 1
-              }
-              builder += newIndividual
-              while (i < population.length) {
-                if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
-                  builder += population(i)
+                builder += newIndividual
+                while (i < population.length) {
+                  if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
+                    builder += population(i)
+                  }
+                  i += 1
                 }
-                i += 1
+                val newPopulation = builder.result()
+                work(newPopulation, iterationsDone + 1, newFrontHitting)
               }
-              work(builder.result(), iterationsDone + 1, newFrontHitting)
             }
           }
         }
       }
     }
     val initIndividual = Array.fill(problem.problemSize)(rng.nextBoolean())
+    val initFitness = problem.apply(initIndividual)
     val (iterations, frontHittingTime, hittingPopulationSize) = work(
-      Array(Individual(initIndividual, problem.apply(initIndividual), 0)), 1, None
+      Array(Individual(initIndividual, initFitness, 0)), 1,
+      if (problem.isOptimumFitness(initFitness)) Some((1L, 1)) else None
     )
     Seq(iterations.toDouble, frontHittingTime.toDouble, hittingPopulationSize.toDouble)
   }

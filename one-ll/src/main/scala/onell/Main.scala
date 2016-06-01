@@ -15,6 +15,48 @@ import scala.language.implicitConversions
   * The main class which runs experiments.
   */
 object Main {
+  val numberTokenSorting = new Ordering[String] {
+    override def compare(x: String, y: String): Int = {
+      if (x.isEmpty && y.isEmpty) {
+        0
+      } else if (x.isEmpty) {
+        -1
+      } else if (y.isEmpty) {
+        1
+      } else {
+        val xStartsWithDigit = x(0).isDigit
+        val yStartsWithDigit = y(0).isDigit
+        if (xStartsWithDigit != yStartsWithDigit) {
+          x(0) - y(0)
+        } else if (xStartsWithDigit) {
+          val xFirstNonDigit0 = x.indexWhere(!_.isDigit)
+          val yFirstNonDigit0 = y.indexWhere(!_.isDigit)
+          val xFirstNonDigit = if (xFirstNonDigit0 == -1) x.length else xFirstNonDigit0
+          val yFirstNonDigit = if (yFirstNonDigit0 == -1) y.length else yFirstNonDigit0
+          val xDigit = x.substring(0, xFirstNonDigit).toLong
+          val yDigit = y.substring(0, yFirstNonDigit).toLong
+          if (xDigit == yDigit) {
+            compare(x.substring(xFirstNonDigit), y.substring(yFirstNonDigit))
+          } else {
+            xDigit.compare(yDigit)
+          }
+        } else {
+          val xFirstDigit0 = x.indexWhere(_.isDigit)
+          val yFirstDigit0 = y.indexWhere(_.isDigit)
+          val xFirstDigit = if (xFirstDigit0 == -1) x.length else xFirstDigit0
+          val yFirstDigit = if (yFirstDigit0 == -1) y.length else yFirstDigit0
+          val xPrefix = x.substring(0, xFirstDigit)
+          val yPrefix = y.substring(0, yFirstDigit)
+          if (xPrefix != yPrefix) {
+            xPrefix.compareTo(yPrefix)
+          } else {
+            compare(x.substring(xFirstDigit), y.substring(yFirstDigit))
+          }
+        }
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     Locale.setDefault(Locale.US)
     val runner = new Runner
@@ -56,7 +98,9 @@ object Main {
         Config(new LeadingOnesTrailingZeros(n), getFertilitySEMO)
       ))
 
-      def byProblem(configs: Seq[Configuration]) = configs.groupBy(_.problem.name).mapValues(_.sortBy(_.algorithm.name)).toIndexedSeq.sortBy(_._1)
+      def byProblem(configs: Seq[Configuration]) = {
+        configs.groupBy(_.problem.name).mapValues(_.sortBy(_.algorithm.name)).toIndexedSeq.sortBy(_._1)(numberTokenSorting)
+      }
       val oneLLByProblem = byProblem(oneLLConfigurations)
       val semoByProblem = byProblem(semoConfigurations)
 

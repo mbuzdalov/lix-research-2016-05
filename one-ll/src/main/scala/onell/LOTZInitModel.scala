@@ -44,16 +44,14 @@ object LOTZInitModel {
   }
 
   def main(args: Array[String]): Unit = {
-    val sizes = Seq(100, 1000, 10000, 100000, 1000000, 10000000)
+    val sizes = Seq(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
     for (n <- sizes; t <- sizes) {
-      var max = 0
-      var sum = 0L
       val runs = 100
-      for (r <- 1 to runs) {
-        val result = iteration(CartesianTree((n / 2, 0)), new CartesianTree.SplitResult[(Int, Int)], n, 1, 0, t)
-        max = math.max(max, result)
-        sum += result
+      val results = for (r <- (1 to runs).par) yield {
+        iteration(CartesianTree((n / 2, 0)), new CartesianTree.SplitResult[(Int, Int)], n, 1, 0, t)
       }
+      val max = results.max
+      val sum = results.sum
       println(s"n = $n, t = $t: max = $max, avg = ${sum.toDouble / runs}")
     }
   }
