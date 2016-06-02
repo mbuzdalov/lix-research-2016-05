@@ -1,5 +1,6 @@
 package onell
 
+import java.io.{File, PrintWriter}
 import java.util.Random
 import java.util.concurrent.ThreadLocalRandom
 
@@ -23,20 +24,20 @@ object LOTZInitModel {
     iterationLimit: Long
   ): Int = {
     if (iterations < iterationLimit) {
-      val index = rng.nextInt(state.subtreeSize)
-      val (x, y) = state.chooseAt(index)
+      val index = rng.nextInt(state.size)
+      val (x, y) = state.apply(index)
       val newX = math.min(x, rng.nextInt(problemSize))
       val newY = y + 1
       val newK = (newX, newY)
       state.split(newK, split)(orderingFirstIncreasing)
-      if (split.m.subtreeSize > 0 && split.m.last._2 >= newY ||
-          split.r.subtreeSize > 0 && split.r.head._2 >= newY) {
+      if (split.m.size > 0 && split.m.last._2 >= newY ||
+          split.r.size > 0 && split.r.head._2 >= newY) {
         iteration(state, split, problemSize, maxSize, iterations + 1, iterationLimit)
       } else {
         val rightPart = split.r
         split.l.split(newK, split)(orderingSecondDecreasing)
         val newTree = split.l.merge(CartesianTree(newK)).merge(rightPart)
-        iteration(newTree, split, problemSize, math.max(maxSize, newTree.subtreeSize), iterations + 1, iterationLimit)
+        iteration(newTree, split, problemSize, math.max(maxSize, newTree.size), iterations + 1, iterationLimit)
       }
     } else {
       maxSize
@@ -45,10 +46,26 @@ object LOTZInitModel {
 
   def main(args: Array[String]): Unit = {
     val sizes = Seq(100, 1000, 10000, 100000, 1000000, 10000000, 100000000)
+    val cacheDir = "cache/lotz-model-1"
     for (n <- sizes; t <- sizes) {
       val runs = 100
       val results = for (r <- (1 to runs).par) yield {
-        iteration(CartesianTree((n / 2, 0)), new CartesianTree.SplitResult[(Int, Int)], n, 1, 0, t)
+        val file = new File(s"$cacheDir/$n-$t/$r")
+        file.getParentFile.mkdirs()
+        if (file.exists()) {
+          val source = scala.io.Source.fromFile(file)
+          val rv = source.getLines().next().toLong
+          source.close()
+          rv
+        } else {
+          val timeStart = System.nanoTime()
+          val rv = iteration(CartesianTree((n / 2, 0)), new CartesianTree.SplitResult[(Int, Int)], n, 1, 0, t)
+          val pw = new PrintWriter(file)
+          pw.println(rv)
+          pw.println(s"Wall-clock time: ${(System.nanoTime() - timeStart) / 1e9} seconds")
+          pw.close()
+          rv
+        }
       }
       val max = results.max
       val sum = results.sum

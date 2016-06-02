@@ -13,12 +13,12 @@ trait CartesianTree[+D] {
   def left: CartesianTree[D]
   def right: CartesianTree[D]
   def data: D
-  def subtreeSize: Int
+  def size: Int
 
-  def head: D = chooseAt(0)
-  def last: D = chooseAt(subtreeSize - 1)
+  def head: D = apply(0)
+  def last: D = apply(size - 1)
 
-  def chooseAt(index: Int): D
+  def apply(index: Int): D
 
   def split[D1 >: D](key: D1, result: SplitResult[D1])(implicit ordering: Ordering[D1]): Unit
   def merge[D1 >: D](right: CartesianTree[D1]): CartesianTree[D1]
@@ -34,10 +34,10 @@ trait CartesianTree[+D] {
 
 object CartesianTree {
   val EmptyTree: CartesianTree[Nothing] = new CartesianTree[Nothing] {
-    override final val subtreeSize: Int = 0
+    override final val size: Int = 0
     override final val left: CartesianTree[Nothing] = this
     override final val right: CartesianTree[Nothing] = this
-    override def chooseAt(index: Int): Nothing = throw new UnsupportedOperationException("Cannot choose anything in an empty tree")
+    override def apply(index: Int): Nothing = throw new UnsupportedOperationException("An empty tree has no elements")
     override def data: Nothing = throw new UnsupportedOperationException("No data in an empty tree")
     override def merge[D1 >: Nothing](right: CartesianTree[D1]) = right
     override def flushToBuilder(builder: Growable[Nothing]): Unit = {}
@@ -58,15 +58,16 @@ object CartesianTree {
     data: D,
     heapKey: Int
   ) extends CartesianTree[D] {
-    override final val subtreeSize = 1 + left.subtreeSize + right.subtreeSize
+    override final val size = 1 + left.size + right.size
 
-    override def chooseAt(index: Int): D = {
-      if (index < left.subtreeSize) {
-        left.chooseAt(index)
-      } else if (index == left.subtreeSize) {
+    override def apply(index: Int): D = {
+      require(0 <= index && index < size, s"Illegal index $index for a tree of size $size")
+      if (index < left.size) {
+        left.apply(index)
+      } else if (index == left.size) {
         data
       } else {
-        right.chooseAt(index - left.subtreeSize - 1)
+        right.apply(index - left.size - 1)
       }
     }
 
