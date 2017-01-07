@@ -2,7 +2,6 @@ package onell
 
 import java.nio.file.{Files, Paths}
 import java.util.concurrent.{Callable, Executors, ThreadLocalRandom}
-import java.util.function.Consumer
 import java.util.{Arrays, Locale, Random}
 
 import onell.algorithms.{GlobalSEMO, OnePlusLambdaLambdaGA, OnePlusOneEA}
@@ -132,16 +131,10 @@ object Main {
     override type Fitness = F
   }
 
-  implicit def functionToCallable[T](function: () => T): Callable[T] = new Callable[T] {
-    override def call(): T = function()
-  }
-  implicit def functionToConsumer[T](function: T => Any): Consumer[T] = new Consumer[T] {
-    override def accept(t: T): Unit = function(t)
-  }
   implicit def rng: Random = ThreadLocalRandom.current()
 
   class Runner {
-    val service = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors())
+    private final val service = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors())
 
     def close(): Unit = {
       service.shutdown()
@@ -187,7 +180,7 @@ object Main {
       } else Seq()
       if (previousResults.size < times) {
         val result = previousResults ++ runInParallel(algorithm, problem, times - previousResults.size)
-        val resultSorted = result.sortBy(_(0))
+        val resultSorted = result.sortBy(_.head)
         Files.createDirectories(path.getParent)
         Files.write(path, (algorithm.revision +: resultSorted.map(_.mkString(" "))).asJava)
         resultSorted
@@ -198,7 +191,7 @@ object Main {
   }
 
   class Statistics(data: Seq[Double]) {
-    val sortedData = data.toIndexedSeq.sorted
+    private final val sortedData = data.toIndexedSeq.sorted
 
     def percentile(ratio: Double): Double = {
       val index = (sortedData.size - 1) * ratio

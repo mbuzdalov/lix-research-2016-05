@@ -12,8 +12,8 @@ import onell.util.CartesianTree
 object LOTZInitModel {
   implicit def rng: Random = ThreadLocalRandom.current()
 
-  val orderingFirstIncreasing = Ordering.by((p: (Int, Int)) => p._1)
-  val orderingSecondDecreasing = Ordering.by((p: (Int, Int)) => -p._2)
+  private final val orderingFirstIncreasing = Ordering.by((p: (Int, Int)) => p._1)
+  private final val orderingSecondDecreasing = Ordering.by((p: (Int, Int)) => -p._2)
 
   def iteration(
     state: CartesianTree[(Int, Int)],

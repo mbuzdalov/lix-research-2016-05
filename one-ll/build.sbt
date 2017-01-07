@@ -2,6 +2,6 @@ name := "one-ll"
 
 version := "1.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
 
-scalacOptions ++= Seq("-optimize", "-Ybackend:GenBCode", "-Yopt:l:classpath", "-Yopt-warnings:_")
+scalacOptions ++= Seq("-opt:l:classpath", "-opt-warnings:_")

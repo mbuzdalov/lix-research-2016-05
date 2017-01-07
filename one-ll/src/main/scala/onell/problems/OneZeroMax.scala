@@ -7,10 +7,10 @@ import onell.{Mutation, MutationAwarePseudoBooleanProblem}
   * OneMax is the first objective, ZeroMax is the second one.
   */
 class OneZeroMax(n: Int) extends MutationAwarePseudoBooleanProblem[(Int, Int)] {
-  override def copy = this
+  override def copy: this.type = this
   override def name: String = s"OneZeroMax($n)"
   override def isOptimumFitness(fitness: (Int, Int)): Boolean = true
-  override def numberOfOptimumFitnessValues = n + 1
+  override def numberOfOptimumFitnessValues: Int = n + 1
   override def problemSize: Int = n
   override def apply(solution: Array[Boolean]): (Int, Int) = {
     val oneMax = (0 until n).count(solution)

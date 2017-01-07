@@ -39,7 +39,7 @@ object CartesianTree {
     override final val right: CartesianTree[Nothing] = this
     override def apply(index: Int): Nothing = throw new UnsupportedOperationException("An empty tree has no elements")
     override def data: Nothing = throw new UnsupportedOperationException("No data in an empty tree")
-    override def merge[D1 >: Nothing](right: CartesianTree[D1]) = right
+    override def merge[D1 >: Nothing](right: CartesianTree[D1]): CartesianTree[D1] = right
     override def flushToBuilder(builder: Growable[Nothing]): Unit = {}
     override def split[D1 >: Nothing](key: D1, result: SplitResult[D1])(implicit ordering: Ordering[D1]): Unit = {
       result.l = this
@@ -58,7 +58,7 @@ object CartesianTree {
     data: D,
     heapKey: Int
   ) extends CartesianTree[D] {
-    override final val size = 1 + left.size + right.size
+    override final val size: Int = 1 + left.size + right.size
 
     override def apply(index: Int): D = {
       require(0 <= index && index < size, s"Illegal index $index for a tree of size $size")
@@ -106,6 +106,6 @@ object CartesianTree {
   }
 
   class SplitResult[D] {
-    var l, m, r: CartesianTree[D] = null
+    var l, m, r: CartesianTree[D] = _
   }
 }

@@ -45,7 +45,7 @@ class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseu
 
   private var usedClauses = new MutableIntSet(m)
 
-  override def copy = {
+  override def copy: this.type = {
     val res = clone.asInstanceOf[this.type]
     res.usedClauses = new MutableIntSet(m)
     res

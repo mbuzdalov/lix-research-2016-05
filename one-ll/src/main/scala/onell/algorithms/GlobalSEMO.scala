@@ -69,7 +69,7 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
             val location = binarySearch(population, newFitness)
             // First check that it is not worse than others
             val notBad = location match {
-              case FoundExact(i) => true
+              case FoundExact(_) => true
               case FoundBetween(i) =>
                 (i == 0 || !dominates(problem.problemSize, population(i - 1).fitness, newFitness)) &&
                 (i == population.length || !dominates(problem.problemSize, population(i).fitness, newFitness))
@@ -147,12 +147,12 @@ object GlobalSEMO {
   object Selection {
     trait Uniform extends GlobalSEMO {
       override def name: String = super.name + "[selection=uniform]"
-      override def select(population: Array[Individual], rng: Random) = rng.nextInt(population.length)
+      override def select(population: Array[Individual], rng: Random): Int = rng.nextInt(population.length)
     }
 
     trait Fertility extends GlobalSEMO {
       override def name: String = super.name + "[selection=fertility]"
-      override def select(population: Array[Individual], rng: Random) = {
+      override def select(population: Array[Individual], rng: Random): Int = {
         var rv = 0
         var builder = Array.newBuilder[Int]
         for (i <- 0 until population.length) {
@@ -173,7 +173,7 @@ object GlobalSEMO {
       private final val extremeProbability = 1.0 / 3
       private final val maxCrowdingProbability = 1.0 / 3
       override def name: String = super.name + "[selection=crowding]"
-      override def select(population: Array[Individual], rng: Random) = {
+      override def select(population: Array[Individual], rng: Random): Int = {
         val selectionProbability = rng.nextDouble()
         if (selectionProbability < extremeProbability) {
           if (rng.nextBoolean()) 0 else population.length - 1
