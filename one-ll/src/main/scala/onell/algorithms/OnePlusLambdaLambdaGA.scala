@@ -16,7 +16,9 @@ class OnePlusLambdaLambdaGA(
   private final val tuningStrength = 1.5
   private final val tuningStrength4 = math.pow(tuningStrength, 0.25)
 
-  override def revision: String = "rev1 +randomfix"
+  // last change: evaluations += 2 * lambdaInt
+  // instead of lambda.toInt which used a new lambda
+  override def revision: String = "rev1.1"
 
   override def name: String = s"(1+LL)[$minimalLambdaText;$maximalLambdaText]"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda")
@@ -79,7 +81,7 @@ class OnePlusLambdaLambdaGA(
           i += 1
         }
       }
-      evaluations += 2 * lambda.toInt
+      evaluations += 2 * lambdaInt
       iterations += 1
     }
 
