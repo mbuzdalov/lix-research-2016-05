@@ -11,7 +11,7 @@ import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
 abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
   override def name: String = "GlobalSEMO"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Front hitting time", "Front hitting population size")
-  override def revision: String = "rev7"
+  override def revision: String = "rev7.1"
 
   sealed trait BinarySearchResult {
     def insertionPoint: Int
@@ -86,7 +86,10 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
                   // silently replace it with the new one and apply NEITHER success NOR failure to the parent.
                   // It should be safe to reuse the replaced individual's bit array.
                   val tmpArray = population(equalIndex).bits
-                  System.arraycopy(theArray, 0, tmpArray, 0, theArray.length)
+                  if (!problem.equivalenceFollows(newFitness)) {
+                    // If new and replaced individuals are not equivalent, copying is necessary.
+                    System.arraycopy(theArray, 0, tmpArray, 0, theArray.length)
+                  }
                   population(equalIndex) = Individual(tmpArray, newFitness, population(equalIndex).failures)
                   mutation.mutate(theArray)
                   work(population, iterationsDone + 1, newFrontHitting)
