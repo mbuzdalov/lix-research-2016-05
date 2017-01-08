@@ -98,6 +98,7 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
                   val newIndividual = Individual(theArray.clone(), newFitness, 0)
                   mutation.mutate(theArray)
                   population(index) = population(index).applySuccess
+                  // Second, filter out the dominated members of the population
                   val builder = Array.newBuilder[Individual]
                   var i = 0
                   while (i < population.length && population(i).fitness._1 < newFitness._1) {
@@ -141,7 +142,7 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
 object GlobalSEMO {
   case class Individual(bits: Array[Boolean], fitness: (Int, Int), failures: Int) {
     def applySuccess: Individual = if (failures == 0) this else copy(failures = 0)
-    def applyFailure: Individual = copy(failures = this.failures + 1)
+    def applyFailure: Individual = copy(failures = failures + 1)
   }
 
   object Selection {
@@ -154,7 +155,7 @@ object GlobalSEMO {
       override def name: String = super.name + "[selection=fertility]"
       override def select(population: Array[Individual], rng: Random): Int = {
         var rv = 0
-        var builder = Array.newBuilder[Int]
+        val builder = Array.newBuilder[Int]
         for (i <- 0 until population.length) {
           if (population(i).failures < population(rv).failures) {
             rv = i
