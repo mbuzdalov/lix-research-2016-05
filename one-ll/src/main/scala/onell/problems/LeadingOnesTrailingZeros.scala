@@ -8,6 +8,7 @@ import onell.{Mutation, MutationAwarePseudoBooleanProblem}
 class LeadingOnesTrailingZeros(n: Int) extends MutationAwarePseudoBooleanProblem[(Int, Int)] {
   override def copy: this.type = this
   override def name: String = s"LeadingOnesTrailingZeros($n)"
+  override def equivalenceFollows(fitness: (Int, Int)): Boolean = fitness._1 + fitness._2 >= n - 2
   override def isOptimumFitness(fitness: (Int, Int)): Boolean = fitness._1 + fitness._2 == n
   override def numberOfOptimumFitnessValues: Int = n + 1
   override def problemSize: Int = n

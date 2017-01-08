@@ -9,6 +9,7 @@ import onell.{Mutation, MutationAwarePseudoBooleanProblem}
 class OneZeroMax(n: Int) extends MutationAwarePseudoBooleanProblem[(Int, Int)] {
   override def copy: this.type = this
   override def name: String = s"OneZeroMax($n)"
+  override def equivalenceFollows(fitness: (Int, Int)): Boolean = true // this is cheating, but for SEMO it is true.
   override def isOptimumFitness(fitness: (Int, Int)): Boolean = true
   override def numberOfOptimumFitnessValues: Int = n + 1
   override def problemSize: Int = n

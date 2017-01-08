@@ -7,6 +7,14 @@ trait MutationAwarePseudoBooleanProblem[F] {
   def copy: this.type
 
   /**
+    * Returns whether individuals with the given fitness value
+    * are necessarily equivalent by behaviour with each other.
+    * @param fitness the fitness value to consider.
+    * @return whether all individuals with this fitness value behave the same.
+    */
+  def equivalenceFollows(fitness: F): Boolean
+
+  /**
     * Returns the name of the problem.
     * @return the name of the problem.
     */

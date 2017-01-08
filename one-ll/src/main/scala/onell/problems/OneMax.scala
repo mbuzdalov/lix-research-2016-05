@@ -7,6 +7,7 @@ import onell.{Mutation, MutationAwarePseudoBooleanProblem}
   */
 class OneMax(n: Int) extends MutationAwarePseudoBooleanProblem[Int] {
   override def copy: this.type = this
+  override def equivalenceFollows(fitness: Int): Boolean = fitness == 0 || fitness == n
   override def name: String = s"OneMax($n)"
   override def isOptimumFitness(fitness: Int): Boolean = fitness == n
   override def numberOfOptimumFitnessValues = 1

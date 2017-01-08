@@ -50,6 +50,7 @@ class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseu
     res.usedClauses = new MutableIntSet(m)
     res
   }
+  override def equivalenceFollows(fitness: Int): Boolean = false
   override def name: String = s"Random3CNF($n,$m)"
   override def isOptimumFitness(fitness: Int): Boolean = fitness == m
   override def numberOfOptimumFitnessValues: Int = 1
