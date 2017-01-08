@@ -80,41 +80,38 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
               population(index) = population(index).applyFailure
               work(population, iterationsDone + 1, newFrontHitting)
             } else {
-              val equalIndex = location match {
-                case FoundExact(i) => i
-                case FoundBetween(_) => -1
-              }
-              if (equalIndex >= 0) {
-                // If someone's fitness equals the new fitness,
-                // silently replace it with the new one and apply NEITHER success NOR failure to the parent.
-                // It should be safe to reuse the replaced individual's bit array.
-                val tmpArray = population(equalIndex).bits
-                System.arraycopy(theArray, 0, tmpArray, 0, theArray.length)
-                population(equalIndex) = Individual(tmpArray, newFitness, population(equalIndex).failures)
-                mutation.mutate(theArray)
-                work(population, iterationsDone + 1, newFrontHitting)
-              } else {
-                // The general stuff. First, split off the new individual and revert the parent
-                val newIndividual = Individual(theArray.clone(), newFitness, 0)
-                mutation.mutate(theArray)
-                population(index) = population(index).applySuccess
-                val builder = Array.newBuilder[Individual]
-                var i = 0
-                while (i < population.length && population(i).fitness._1 < newFitness._1) {
-                  if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
-                    builder += population(i)
+              location match {
+                case FoundExact(equalIndex) =>
+                  // If someone's fitness equals the new fitness,
+                  // silently replace it with the new one and apply NEITHER success NOR failure to the parent.
+                  // It should be safe to reuse the replaced individual's bit array.
+                  val tmpArray = population(equalIndex).bits
+                  System.arraycopy(theArray, 0, tmpArray, 0, theArray.length)
+                  population(equalIndex) = Individual(tmpArray, newFitness, population(equalIndex).failures)
+                  mutation.mutate(theArray)
+                  work(population, iterationsDone + 1, newFrontHitting)
+                case FoundBetween(_) =>
+                  // The general stuff. First, split off the new individual and revert the parent
+                  val newIndividual = Individual(theArray.clone(), newFitness, 0)
+                  mutation.mutate(theArray)
+                  population(index) = population(index).applySuccess
+                  val builder = Array.newBuilder[Individual]
+                  var i = 0
+                  while (i < population.length && population(i).fitness._1 < newFitness._1) {
+                    if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
+                      builder += population(i)
+                    }
+                    i += 1
                   }
-                  i += 1
-                }
-                builder += newIndividual
-                while (i < population.length) {
-                  if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
-                    builder += population(i)
+                  builder += newIndividual
+                  while (i < population.length) {
+                    if (!dominates(problem.problemSize, newFitness, population(i).fitness)) {
+                      builder += population(i)
+                    }
+                    i += 1
                   }
-                  i += 1
-                }
-                val newPopulation = builder.result()
-                work(newPopulation, iterationsDone + 1, newFrontHitting)
+                  val newPopulation = builder.result()
+                  work(newPopulation, iterationsDone + 1, newFrontHitting)
               }
             }
           }
