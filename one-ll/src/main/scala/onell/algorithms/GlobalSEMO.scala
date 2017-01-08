@@ -56,16 +56,16 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
           work(population, iterationsDone + 1, frontHitting)
         } else {
           // The new one is not worse than its parent.
-          val newFrontHitting = if (frontHitting.isDefined) frontHitting else {
-            if (problem.isOptimumFitness(newFitness)) {
-              Some(iterationsDone, population.length)
-            } else None
-          }
           if (oldFitness == newFitness) {
             // Special case when we are trying to replace the parent.
             // In this case, the mutation is left applied, but no other stuff changes.
             work(population, iterationsDone + 1, frontHitting)
           } else {
+            val newFrontHitting = if (frontHitting.isDefined) frontHitting else {
+              if (problem.isOptimumFitness(newFitness)) {
+                Some(iterationsDone, population.length)
+              } else None
+            }
             val location = binarySearch(population, newFitness)
             // First check that it is not worse than others
             val notBad = location match {
