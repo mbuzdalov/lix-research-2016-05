@@ -1,6 +1,7 @@
 package onell.algorithms
 
 import java.util.Random
+import java.util.concurrent.ThreadLocalRandom
 
 import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
 
@@ -22,10 +23,11 @@ class OnePlusLambdaLambdaGA(
 
   override def name: String = s"(1+LL)[$minimalLambdaText;$maximalLambdaText]"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda")
-  override def solve(problem: MutationAwarePseudoBooleanProblem[Int])(implicit rng: Random): Seq[Double] = {
+  override def solve(problem: MutationAwarePseudoBooleanProblem[Int]): Seq[Double] = {
+    val rng = ThreadLocalRandom.current()
     val n = problem.problemSize
-    val mutation = new Mutation(n, minimalLambda / n)
-    val crossover = new Mutation(n, 1 / minimalLambda)
+    val mutation = new Mutation(n, minimalLambda / n, rng)
+    val crossover = new Mutation(n, 1 / minimalLambda, rng)
 
     val individual = Array.fill(n)(rng.nextBoolean())
     var fitness = problem(individual)
