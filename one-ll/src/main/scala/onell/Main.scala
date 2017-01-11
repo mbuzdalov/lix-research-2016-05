@@ -77,7 +77,7 @@ object Main {
         for (config <- configs) {
           val algorithm = config.algorithm
           val problem = config.problem
-          val stats = runner.compute("cache", algorithm, problem, 1).transpose.map(d => new Statistics(d))
+          val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
           val names = algorithm.metrics
           println(s"  ${algorithm.name}:")
           for ((stat, name) <- (stats, names).zipped) {
