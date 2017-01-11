@@ -62,8 +62,11 @@ class Random3CNF(n: Int, m: Int)(implicit rng: Random) extends MutationAwarePseu
   ): Int = {
     usedClauses.clear()
     for (i <- mutation) {
-      for (j <- clausesOfVar(i)) {
-        usedClauses += j
+      val localClauses = clausesOfVar(i)
+      var j = localClauses.length - 1
+      while (j >= 0) {
+        usedClauses += localClauses(j)
+        j -= 1
       }
     }
     var newFitness = originalFitness
