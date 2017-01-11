@@ -1,6 +1,5 @@
 package onell.algorithms
 
-import java.util.Random
 import java.util.concurrent.ThreadLocalRandom
 
 import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}

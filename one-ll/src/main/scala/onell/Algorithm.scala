@@ -1,7 +1,5 @@
 package onell
 
-import java.util.Random
-
 /**
   * A trait for algorithms solving pseudo-Boolean mutation-aware problems.
   */
