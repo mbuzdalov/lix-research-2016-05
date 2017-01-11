@@ -30,5 +30,5 @@ trait Algorithm[F] {
     * @param problem the problem to be solved.
     * @return the performance metrics.
     */
-  def solve(problem: MutationAwarePseudoBooleanProblem[F]): Seq[Double]
+  def solve(problem: MutationAwarePseudoBooleanProblem.Instance[F]): Seq[Double]
 }

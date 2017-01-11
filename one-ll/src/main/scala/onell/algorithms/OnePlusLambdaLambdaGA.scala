@@ -23,7 +23,7 @@ class OnePlusLambdaLambdaGA(
 
   override def name: String = s"(1+LL)[$minimalLambdaText;$maximalLambdaText]"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda")
-  override def solve(problem: MutationAwarePseudoBooleanProblem[Int]): Seq[Double] = {
+  override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[Int]): Seq[Double] = {
     val rng = ThreadLocalRandom.current()
     val n = problem.problemSize
     val mutation = new Mutation(n, minimalLambda / n, rng)

@@ -12,7 +12,7 @@ object OnePlusOneEA extends Algorithm[Int] {
   override def name: String = "(1+1)-EA"
   override def revision: String = "rev0 +randomfix"
   override def metrics: Seq[String] = Seq("Fitness evaluations")
-  override def solve(problem: MutationAwarePseudoBooleanProblem[Int]): Seq[Double] = {
+  override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[Int]): Seq[Double] = {
     val n = problem.problemSize
     val rng = ThreadLocalRandom.current()
     val mutation = new Mutation(n, 1.0 / n, rng)

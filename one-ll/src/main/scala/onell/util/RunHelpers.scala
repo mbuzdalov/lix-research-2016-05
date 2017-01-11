@@ -77,11 +77,8 @@ object RunHelpers {
     }
 
     def runInParallel[F](algorithm: Algorithm[F], problem: MutationAwarePseudoBooleanProblem[F], times: Int): Seq[Seq[Double]] = {
-      val threadLocalProblem = new ThreadLocal[MutationAwarePseudoBooleanProblem[F]] {
-        override protected def initialValue(): MutationAwarePseudoBooleanProblem[F] = problem.copy
-      }
       val timeStart = System.nanoTime()
-      val tasks = Array.fill[Callable[Seq[Double]]](times)(() => algorithm.solve(threadLocalProblem.get()))
+      val tasks = Array.fill[Callable[Seq[Double]]](times)(() => algorithm.solve(problem.newInstance))
       val rv = service.invokeAll(Arrays.asList(tasks :_*)).asScala.map(_.get()).toIndexedSeq
       val timeDone = (System.nanoTime() - timeStart) / 1e9
       println(s"  [$times runs done in $timeDone s]")

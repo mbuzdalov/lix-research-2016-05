@@ -5,8 +5,11 @@ import onell.{Mutation, MutationAwarePseudoBooleanProblem}
 /**
   * The (LeadingOnes, TrailingZeros) bi-objective problem implemented as a mutation-aware pseudo-Boolean problem.
   */
-class LeadingOnesTrailingZeros(n: Int) extends MutationAwarePseudoBooleanProblem[(Int, Int)] {
-  override def copy: this.type = this
+class LeadingOnesTrailingZeros(n: Int)
+  extends MutationAwarePseudoBooleanProblem[(Int, Int)]
+  with MutationAwarePseudoBooleanProblem.Instance[(Int, Int)]
+{
+  override def newInstance: MutationAwarePseudoBooleanProblem.Instance[(Int, Int)] = this
   override def name: String = s"LeadingOnesTrailingZeros($n)"
   override def isOptimumFitness(fitness: (Int, Int)): Boolean = fitness._1 + fitness._2 == n
   override def numberOfOptimumFitnessValues: Int = n + 1
