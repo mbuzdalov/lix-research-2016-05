@@ -18,8 +18,6 @@ object Main {
   def getOnePlusOneEA(n: Int) = OnePlusOneEA
   def getOnePlusLLN(n: Int)   = new OnePlusLambdaLambdaGA()
   def getOnePlusLLLog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
-  def getOnePlusLLLogRoot2(n: Int) = new OnePlusLambdaLambdaGA(1, "1", math.pow(2 * math.log(n + 1), 0.5), "pow(2 ln n, 0.5)")
-  def getOnePlusLLLogRoot4(n: Int) = new OnePlusLambdaLambdaGA(1, "1", math.pow(2 * math.log(n + 1), 0.25), "pow(2 ln n, 0.25)")
   def getOnePlusLLx(n: Int, x: Int) = new OnePlusLambdaLambdaGA(1, "1", x, x.toString)
 
   def getSimpleSEMO    = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Uniform
@@ -35,16 +33,12 @@ object Main {
         (4 to 20).map(1 << _).flatMap(n => Seq(
           Config(getOneMax(n), getOnePlusOneEA(n)),
           Config(getOneMax(n), getOnePlusLLN(n)),
-          Config(getOneMax(n), getOnePlusLLLog(n)),
-          Config(getOneMax(n), getOnePlusLLLogRoot2(n)),
-          Config(getOneMax(n), getOnePlusLLLogRoot4(n))
+          Config(getOneMax(n), getOnePlusLLLog(n))
         ))
       } ++ {
         (7 to 16).map(1 << _).flatMap(n => Seq(
           Config(getRandom3CNF(n), getOnePlusOneEA(n)),
-          Config(getRandom3CNF(n), getOnePlusLLLog(n)),
-          Config(getOneMax(n), getOnePlusLLLogRoot2(n)),
-          Config(getOneMax(n), getOnePlusLLLogRoot4(n))
+          Config(getRandom3CNF(n), getOnePlusLLLog(n))
         ))
       } ++ {
         (7 to 12).map(1 << _).flatMap(n => Seq(
