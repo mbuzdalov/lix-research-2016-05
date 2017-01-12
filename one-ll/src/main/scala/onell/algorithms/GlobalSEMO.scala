@@ -1,6 +1,7 @@
 package onell.algorithms
 
 import java.util.Random
+import java.util.concurrent.ThreadLocalRandom
 
 import onell.algorithms.GlobalSEMO.Individual
 import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
@@ -35,8 +36,9 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
     }
   }
 
-  override def solve(problem: MutationAwarePseudoBooleanProblem[(Int, Int)])(implicit rng: Random): Seq[Double] = {
-    val mutation = new Mutation(problem.problemSize, 1.0 / problem.problemSize)
+  override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[(Int, Int)]): Seq[Double] = {
+    val rng = ThreadLocalRandom.current()
+    val mutation = new Mutation(problem.problemSize, 1.0 / problem.problemSize, rng)
     def work(population: Array[Individual], iterationsDone: Long, frontHitting: Option[(Long, Int)]): (Long, Long, Int) = {
       if (population.length == problem.numberOfOptimumFitnessValues && population.forall(i => problem.isOptimumFitness(i.fitness))) {
         // Found the entire front

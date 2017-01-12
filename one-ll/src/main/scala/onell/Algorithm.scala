@@ -1,7 +1,5 @@
 package onell
 
-import java.util.Random
-
 /**
   * A trait for algorithms solving pseudo-Boolean mutation-aware problems.
   */
@@ -28,8 +26,7 @@ trait Algorithm[F] {
     * Solves the given problem and returns the performance metrics (for meaning of these metrics,
     * see the return of `metrics`).
     * @param problem the problem to be solved.
-    * @param rng the random number generator to use.
     * @return the performance metrics.
     */
-  def solve(problem: MutationAwarePseudoBooleanProblem[F])(implicit rng: Random): Seq[Double]
+  def solve(problem: MutationAwarePseudoBooleanProblem.Instance[F]): Seq[Double]
 }

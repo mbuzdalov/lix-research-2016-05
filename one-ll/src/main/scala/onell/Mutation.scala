@@ -8,7 +8,7 @@ import onell.util.{IntSet, MutableIntSet}
   * A mutation operator which generates mutation indices
   * based on the problem size `n` and the mutation probability `p`.
   */
-class Mutation(n: Int, initialP: Double)(implicit rng: Random) extends IntSet {
+class Mutation(n: Int, initialP: Double, rng: Random) extends IntSet {
   private var p = initialP
   private var log1p = math.log(1 - p)
   private final val indices = new MutableIntSet(n)

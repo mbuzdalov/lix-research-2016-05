@@ -1,6 +1,6 @@
 package onell.algorithms
 
-import java.util.Random
+import java.util.concurrent.ThreadLocalRandom
 
 import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
 
@@ -11,9 +11,10 @@ object OnePlusOneEA extends Algorithm[Int] {
   override def name: String = "(1+1)-EA"
   override def revision: String = "rev0 +randomfix"
   override def metrics: Seq[String] = Seq("Fitness evaluations")
-  override def solve(problem: MutationAwarePseudoBooleanProblem[Int])(implicit rng: Random): Seq[Double] = {
+  override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[Int]): Seq[Double] = {
     val n = problem.problemSize
-    val mutation = new Mutation(n, 1.0 / n)
+    val rng = ThreadLocalRandom.current()
+    val mutation = new Mutation(n, 1.0 / n, rng)
 
     val individual = Array.fill(n)(rng.nextBoolean())
     var evaluations = 1L
