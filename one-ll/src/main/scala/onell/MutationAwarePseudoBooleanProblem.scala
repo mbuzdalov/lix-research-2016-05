@@ -12,14 +12,6 @@ trait MutationAwarePseudoBooleanProblem[F] {
   def newInstance: MutationAwarePseudoBooleanProblem.Instance[F]
 
   /**
-    * Returns whether individuals with the given fitness value
-    * are necessarily equivalent by behaviour with each other.
-    * @param fitness the fitness value to consider.
-    * @return whether all individuals with this fitness value behave the same.
-    */
-  def equivalenceFollows(fitness: F): Boolean
-
-  /**
     * Returns the name of the problem.
     * @return the name of the problem.
     */
@@ -39,6 +31,14 @@ object MutationAwarePseudoBooleanProblem {
       * @return the optimum fitness value.
       */
     def isOptimumFitness(fitness: F): Boolean
+
+    /**
+      * Returns whether individuals with the given fitness value
+      * are necessarily equivalent by behaviour with each other.
+      * @param fitness the fitness value to consider.
+      * @return whether all individuals with this fitness value behave the same.
+      */
+    def equivalenceFollows(fitness: F): Boolean
 
     /**
       * Returns the number of different optimum fitness values.
