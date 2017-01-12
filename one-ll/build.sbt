@@ -4,4 +4,4 @@ version := "1.0"
 
 scalaVersion := "2.12.1"
 
-scalacOptions ++= Seq("-opt:l:classpath", "-opt-warnings:_")
+scalacOptions ++= Seq("-unchecked", "-opt:l:classpath", "-opt-warnings:_")

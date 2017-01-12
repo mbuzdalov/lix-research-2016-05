@@ -39,10 +39,7 @@ object Main {
       } ++ {
         (7 to 16).map(1 << _).flatMap(n => Seq(
           Config(getRandom3CNF(n), getOnePlusOneEA(n)),
-          Config(getRandom3CNF(n), getOnePlusLLLog(n))
-        ))
-      } ++ {
-        (7 to 12).map(1 << _).flatMap(n => Seq(
+          Config(getRandom3CNF(n), getOnePlusLLLog(n)),
           Config(getRandom3CNF(n), getOnePlusLLN(n))
         ))
       }

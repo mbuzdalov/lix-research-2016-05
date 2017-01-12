@@ -14,29 +14,9 @@ abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Front hitting time", "Front hitting population size")
   override def revision: String = "rev7.1"
 
-  sealed trait BinarySearchResult {
-    def insertionPoint: Int
-  }
-  final case class FoundExact(insertionPoint: Int) extends BinarySearchResult
-  final case class FoundBetween(insertionPoint: Int) extends BinarySearchResult
-
-  private def binarySearch(population: Array[Individual], fitness: (Int, Int)): BinarySearchResult = {
-    def run(left: Int, right: Int): BinarySearchResult = {
-      if (left + 1 == right) {
-        if (population(left).fitness == fitness) FoundExact(left) else FoundBetween(right)
-      } else {
-        val mid = (left + right) >>> 1
-        if (population(mid).fitness._1 <= fitness._1) run(mid, right) else run(left, mid)
-      }
-    }
-    if (population.length == 0 || fitness._1 < population(0).fitness._1) {
-      FoundBetween(0)
-    } else {
-      run(0, population.length)
-    }
-  }
-
   override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[(Int, Int)]): Seq[Double] = {
+    import GlobalSEMO._
+
     val rng = ThreadLocalRandom.current()
     val mutation = new Mutation(problem.problemSize, 1.0 / problem.problemSize, rng)
     def work(population: Array[Individual], iterationsDone: Long, frontHitting: Option[(Long, Int)]): (Long, Long, Int) = {
@@ -145,6 +125,28 @@ object GlobalSEMO {
   case class Individual(bits: Array[Boolean], fitness: (Int, Int), failures: Int) {
     def applySuccess: Individual = if (failures == 0) this else copy(failures = 0)
     def applyFailure: Individual = copy(failures = failures + 1)
+  }
+
+  sealed trait BinarySearchResult {
+    def insertionPoint: Int
+  }
+  final case class FoundExact(insertionPoint: Int) extends BinarySearchResult
+  final case class FoundBetween(insertionPoint: Int) extends BinarySearchResult
+
+  private def binarySearch(population: Array[Individual], fitness: (Int, Int)): BinarySearchResult = {
+    def run(left: Int, right: Int): BinarySearchResult = {
+      if (left + 1 == right) {
+        if (population(left).fitness == fitness) FoundExact(left) else FoundBetween(right)
+      } else {
+        val mid = (left + right) >>> 1
+        if (population(mid).fitness._1 <= fitness._1) run(mid, right) else run(left, mid)
+      }
+    }
+    if (population.length == 0 || fitness._1 < population(0).fitness._1) {
+      FoundBetween(0)
+    } else {
+      run(0, population.length)
+    }
   }
 
   object Selection {
