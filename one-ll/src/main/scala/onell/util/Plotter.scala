@@ -1,6 +1,6 @@
 package onell.util
 
-import java.io.PrintWriter
+import java.io.{IOException, PrintWriter}
 
 import scala.collection.mutable.{HashMap => MuHashMap, TreeMap => MuTreeMap}
 import onell.util.RunHelpers.Statistics
@@ -35,32 +35,37 @@ class Plotter(classifier: MutationAwarePseudoBooleanProblem[_] => (String, Doubl
   private def intToColor(index: Int) = intToColor0(index % intToColor0.size)
 
   def writeAllTikZPlots(filename: String, filter: String => Boolean): Unit = {
-    val pw = new PrintWriter(filename)
-    val delta = 0.05
-    for ((clazz, plots) <- map if filter(clazz)) {
-      pw.println(s"\\newcommand{\\iqrPlot$clazz}[2]{")
-      pw.println("  \\begin{tikzpicture}")
-      pw.println("    \\begin{loglogaxis}[xlabel=Problem size, ylabel=Evaluations, " +
-                                          "width=#1, height=#2, legend pos=outer north east]")
-      for (((algo, plot), index) <- plots.toIndexedSeq.zipWithIndex) {
-        val tag = intToString(index)
-        pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=s$tag, forget plot] coordinates {")
-        for ((x, stat) <- plot) {
-          pw.print(s"($x, ${stat.percentile(0.5 - delta) / x})")
+    try {
+      val pw = new PrintWriter(filename)
+      val delta = 0.05
+      for ((clazz, plots) <- map if filter(clazz)) {
+        pw.println(s"\\newcommand{\\iqrPlot$clazz}[2]{")
+        pw.println("  \\begin{tikzpicture}")
+        pw.println("    \\begin{loglogaxis}[xlabel=Problem size, ylabel=Evaluations, " +
+          "width=#1, height=#2, legend pos=outer north east]")
+        for (((algo, plot), index) <- plots.toIndexedSeq.zipWithIndex) {
+          val tag = intToString(index)
+          pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=s$tag, forget plot] coordinates {")
+          for ((x, stat) <- plot) {
+            pw.print(s"($x, ${stat.percentile(0.5 - delta) / x})")
+          }
+          pw.println("};")
+          pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=e$tag, forget plot] coordinates {")
+          for ((x, stat) <- plot) {
+            pw.print(s"($x, ${stat.percentile(0.5 + delta) / x})")
+          }
+          pw.println("};")
+          pw.println(s"      \\addplot[fill = ${intToColor(index)}, area legend] fill between[of = s$tag and e$tag];")
+          pw.println(s"      \\addlegendentry{$algo};")
         }
-        pw.println("};")
-        pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=e$tag, forget plot] coordinates {")
-        for ((x, stat) <- plot) {
-          pw.print(s"($x, ${stat.percentile(0.5 + delta) / x})")
-        }
-        pw.println("};")
-        pw.println(s"      \\addplot[fill = ${intToColor(index)}, area legend] fill between[of = s$tag and e$tag];")
-        pw.println(s"      \\addlegendentry{$algo};")
+        pw.println("    \\end{loglogaxis}")
+        pw.println("  \\end{tikzpicture}")
+        pw.println("}")
       }
-      pw.println("    \\end{loglogaxis}")
-      pw.println("  \\end{tikzpicture}")
-      pw.println("}")
+      pw.close()
+    } catch {
+      case e: IOException =>
+        e.printStackTrace()
     }
-    pw.close()
   }
 }
