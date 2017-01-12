@@ -4,6 +4,7 @@ import java.util.Locale
 
 import onell.algorithms.{GlobalSEMO, OnePlusLambdaLambdaGA, OnePlusOneEA}
 import onell.problems.{LeadingOnesTrailingZeros, OneMax, OneZeroMax, Random3CNF}
+import onell.util.Plotter
 import onell.util.RunHelpers._
 
 import scala.language.implicitConversions
@@ -17,8 +18,8 @@ object Main {
 
   def getOnePlusOneEA(n: Int) = OnePlusOneEA
   def getOnePlusLLN(n: Int)   = new OnePlusLambdaLambdaGA()
-  def getOnePlusLLLog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "2 ln n")
-  def getOnePlusLLx(n: Int, x: Int) = new OnePlusLambdaLambdaGA(1, "1", x, x.toString)
+  def getOnePlusLLLog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "ln n")
+  def getOnePlusLLx(n: Int, x: Int) = new OnePlusLambdaLambdaGA(x, x.toString, x, x.toString)
 
   def getSimpleSEMO    = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Uniform
   def getCrowdingSEMO  = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Crowding
@@ -66,6 +67,15 @@ object Main {
       val fixedOneLLByProblem = byProblem(fixedOneLLConfigurations)
       val semoByProblem = byProblem(semoConfigurations)
 
+      val plotter = new Plotter(p => {
+        val name = p.name
+        val open = name.indexOf('(')
+        val next = name.indexWhere(!_.isDigit, open + 1)
+        val title0 = name.substring(0, open)
+        val title = title0.flatMap(ch => if (ch.isLetter) Some(ch) else None)
+        (title, name.substring(open + 1, next).toDouble)
+      })
+
       for ((problemName, configs) <- oneLLByProblem ++ fixedOneLLByProblem ++ semoByProblem) {
         println(s"$problemName:")
         for (config <- configs) {
@@ -77,8 +87,15 @@ object Main {
           for ((stat, name) <- (stats, names).zipped) {
             println(s"    $name: ${stat.everything}")
           }
+          val fevMetricIndex = names.indexOf("Fitness evaluations")
+          plotter.append(algorithm, problem, stats(fevMetricIndex))
         }
       }
+
+      plotter.writeAllTikZPlots("../../../../itmo/genome-work" +
+                                "/ai-papers/conferences/GECCO/2017/onell-random3cnf" +
+                                "/pic/tikz-plots.tex",
+        s => s == "OneMax" || s == "RandomCNF")
     } finally {
       runner.close()
     }

@@ -29,7 +29,7 @@ object RunHelpers {
         val xStartsWithDigit = x(0).isDigit
         val yStartsWithDigit = y(0).isDigit
         if (xStartsWithDigit != yStartsWithDigit) {
-          x(0) - y(0)
+          x(0).compare(y(0))
         } else if (xStartsWithDigit) {
           val xFirstNonDigit0 = x.indexWhere(!_.isDigit)
           val yFirstNonDigit0 = y.indexWhere(!_.isDigit)
