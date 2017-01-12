@@ -63,28 +63,34 @@ object Random3CNF {
                        originalFitness: Int,
                        mutation: Mutation
                       ): Int = {
-      usedClauses.clear()
-      for (i <- mutation) {
-        val localClauses = clausesOfVar(i)
-        var j = localClauses.length - 1
-        while (j >= 0) {
-          usedClauses += localClauses(j)
-          j -= 1
+      if (3 * mutation.size < n) {
+        usedClauses.clear()
+        for (i <- mutation) {
+          val localClauses = clausesOfVar(i)
+          var j = localClauses.length - 1
+          while (j >= 0) {
+            usedClauses += localClauses(j)
+            j -= 1
+          }
         }
-      }
-      var newFitness = originalFitness
-      for (i <- usedClauses) {
-        if (isOk(i, solution)) {
-          newFitness -= 1
+        var newFitness = originalFitness
+        for (i <- usedClauses) {
+          if (isOk(i, solution)) {
+            newFitness -= 1
+          }
         }
-      }
-      mutation.mutate(solution)
-      for (i <- usedClauses) {
-        if (isOk(i, solution)) {
-          newFitness += 1
+        mutation.mutate(solution)
+        for (i <- usedClauses) {
+          if (isOk(i, solution)) {
+            newFitness += 1
+          }
         }
+        newFitness
+      } else {
+        // This path should be faster for very large mutations
+        mutation.mutate(solution)
+        apply(solution)
       }
-      newFitness
     }
   }
 }

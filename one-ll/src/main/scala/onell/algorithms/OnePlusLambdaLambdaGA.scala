@@ -16,9 +16,8 @@ class OnePlusLambdaLambdaGA(
   private final val tuningStrength = 1.5
   private final val tuningStrength4 = math.pow(tuningStrength, 0.25)
 
-  // last change: evaluations += 2 * lambdaInt
-  // instead of lambda.toInt which used a new lambda
-  override def revision: String = "rev1.1"
+  // last change: if the resulting individual is equal to x, don't think it is good
+  override def revision: String = "rev2"
 
   override def name: String = s"(1+LL)[$minimalLambdaText;$maximalLambdaText]"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda")
@@ -48,24 +47,38 @@ class OnePlusLambdaLambdaGA(
       var t = 0
       while (t < lambdaInt) {
         mutation.createRandomBits(t != 0)
-        val firstChildFitness = problem(individual, fitness, mutation)
-        if (firstChildFitness > bestFirstChildFitness) {
-          firstChildDiffCount = mutation.fill(firstChildDiff)
-          bestFirstChildFitness = firstChildFitness
+        if (mutation.size != 0) {
+          val firstChildFitness = problem(individual, fitness, mutation)
+          if (firstChildFitness > bestFirstChildFitness) {
+            firstChildDiffCount = mutation.fill(firstChildDiff)
+            bestFirstChildFitness = firstChildFitness
+          }
+          mutation.undo(individual)
         }
-        mutation.undo(individual)
         t += 1
       }
       var bestSecondChildFitness = -1
       t = 0
       while (t < lambdaInt) {
         crossover.chooseRandomBits(firstChildDiff, firstChildDiffCount)
-        val secondChildFitness = problem(individual, fitness, crossover)
-        if (secondChildFitness > bestSecondChildFitness) {
-          secondChildDiffCount = crossover.fill(secondChildDiff)
-          bestSecondChildFitness = secondChildFitness
+        if (crossover.size != 0) {
+          if (crossover.size == firstChildDiffCount) {
+            // this is the same as applying the entire mutation back
+            // the fitness would be `bestFirstChildFitness`
+            if (bestFirstChildFitness > bestSecondChildFitness) {
+              bestSecondChildFitness = bestFirstChildFitness
+              secondChildDiffCount = firstChildDiffCount
+              System.arraycopy(firstChildDiff, 0, secondChildDiff, 0, secondChildDiffCount)
+            }
+          } else {
+            val secondChildFitness = problem(individual, fitness, crossover)
+            if (secondChildFitness > bestSecondChildFitness) {
+              secondChildDiffCount = crossover.fill(secondChildDiff)
+              bestSecondChildFitness = secondChildFitness
+            }
+            crossover.undo(individual)
+          }
         }
-        crossover.undo(individual)
         t += 1
       }
       lambda = if (bestSecondChildFitness > fitness) {

@@ -9,7 +9,7 @@ import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
   */
 object OnePlusOneEA extends Algorithm[Int] {
   override def name: String = "(1+1)-EA"
-  override def revision: String = "rev0 +randomfix"
+  override def revision: String = "rev1"
   override def metrics: Seq[String] = Seq("Fitness evaluations")
   override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[Int]): Seq[Double] = {
     val n = problem.problemSize
@@ -22,12 +22,16 @@ object OnePlusOneEA extends Algorithm[Int] {
 
     while (!problem.isOptimumFitness(fitness)) {
       mutation.createRandomBits(false)
-      val newFitness = problem(individual, fitness, mutation)
-      evaluations += 1
-      if (newFitness >= fitness) {
-        fitness = newFitness
+      if (mutation.size == 0) {
+        evaluations += 1
       } else {
-        mutation.undo(individual)
+        val newFitness = problem(individual, fitness, mutation)
+        evaluations += 1
+        if (newFitness >= fitness) {
+          fitness = newFitness
+        } else {
+          mutation.undo(individual)
+        }
       }
     }
 
