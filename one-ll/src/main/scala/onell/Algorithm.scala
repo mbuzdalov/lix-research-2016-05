@@ -5,6 +5,11 @@ package onell
   */
 trait Algorithm[F] {
   /**
+    * Returns the legend to be displayed on plots.
+    * @return the legend to be displayed on plots.
+    */
+  def pgfPlotLegend: String
+  /**
     * Returns the name of the algorithm.
     * @return the name of the algorithm.
     */

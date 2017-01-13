@@ -8,6 +8,7 @@ import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
   * The (1+1)-EA algorithm.
   */
 object OnePlusOneEA extends Algorithm[Int] {
+  override def pgfPlotLegend: String = "(1+1) EA"
   override def name: String = "(1+1)-EA"
   override def revision: String = "rev1"
   override def metrics: Seq[String] = Seq("Fitness evaluations")

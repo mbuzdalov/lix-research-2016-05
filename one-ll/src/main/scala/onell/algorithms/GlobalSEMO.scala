@@ -10,6 +10,7 @@ import onell.{Algorithm, Mutation, MutationAwarePseudoBooleanProblem}
   * The Global SEMO algorithm.
   */
 abstract class GlobalSEMO extends Algorithm[(Int, Int)] {
+  override def pgfPlotLegend: String = name
   override def name: String = "GlobalSEMO"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Front hitting time", "Front hitting population size")
   override def revision: String = "rev7.1"

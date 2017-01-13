@@ -11,7 +11,8 @@ class OnePlusLambdaLambdaGA(
   minimalLambda: Double = 1,
   minimalLambdaText: String = "1",
   maximalLambda: Double = Double.PositiveInfinity,
-  maximalLambdaText: String = "n"
+  maximalLambdaText: String = "n",
+  val pgfPlotLegend: String = "$\\lambda \\le n$"
 ) extends Algorithm[Int] {
   private final val tuningStrength = 1.5
   private final val tuningStrength4 = math.pow(tuningStrength, 0.25)

@@ -14,7 +14,7 @@ class Plotter(classifier: MutationAwarePseudoBooleanProblem[_] => (String, Doubl
 
   def append[F](algorithm: Algorithm[F], problem: MutationAwarePseudoBooleanProblem[F], stats: Statistics): Unit = {
     val (token, x) = classifier(problem)
-    map.getOrElseUpdate(token, new MuTreeMap()(RunHelpers.numberTokenSorting)).getOrElseUpdate(algorithm.name, new MuTreeMap()) += x -> stats
+    map.getOrElseUpdate(token, new MuTreeMap()(RunHelpers.numberTokenSorting)).getOrElseUpdate(algorithm.pgfPlotLegend, new MuTreeMap()) += x -> stats
   }
 
   private def intToString(value: Int): String = {

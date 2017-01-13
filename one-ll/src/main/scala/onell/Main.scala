@@ -18,8 +18,8 @@ object Main {
 
   def getOnePlusOneEA(n: Int) = OnePlusOneEA
   def getOnePlusLLN(n: Int)   = new OnePlusLambdaLambdaGA()
-  def getOnePlusLLLog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "ln n")
-  def getOnePlusLLx(n: Int, x: Int) = new OnePlusLambdaLambdaGA(x, x.toString, x, x.toString)
+  def getOnePlusLLLog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "ln n", "$\\lambda \\le 2 \\ln n$")
+  def getOnePlusLLx(n: Int, x: Int) = new OnePlusLambdaLambdaGA(x, x.toString, x, x.toString, s"$$\\lambda = $x$$")
 
   def getSimpleSEMO    = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Uniform
   def getCrowdingSEMO  = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Crowding
@@ -37,7 +37,7 @@ object Main {
           Config(getOneMax(n), getOnePlusLLLog(n))
         ))
       } ++ {
-        (7 to 16).map(1 << _).flatMap(n => Seq(
+        (7 to 17).map(1 << _).flatMap(n => Seq(
           Config(getRandom3CNF(n), getOnePlusOneEA(n)),
           Config(getRandom3CNF(n), getOnePlusLLLog(n))
         ))
@@ -53,7 +53,7 @@ object Main {
         n = 1 << np
       } yield Config(getOneMax(n), getOnePlusLLx(n, x))) ++ (for {
         x <- 2 to 20
-        np <- 7 to 16
+        np <- 7 to 17
         n = 1 << np
       } yield Config(getRandom3CNF(n), getOnePlusLLx(n, x)))
 
