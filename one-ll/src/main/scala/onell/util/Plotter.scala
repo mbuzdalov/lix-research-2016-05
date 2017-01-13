@@ -41,7 +41,8 @@ class Plotter(classifier: MutationAwarePseudoBooleanProblem[_] => (String, Doubl
       for ((clazz, plots) <- map if filter(clazz)) {
         pw.println(s"\\newcommand{\\iqrPlot$clazz}[2]{")
         pw.println("  \\begin{tikzpicture}")
-        pw.println("    \\begin{axis}[xmode=log, log basis x = 2, xlabel=Problem size, ylabel=Evaluations / problem size, " +
+        pw.println("    \\begin{axis}[enlargelimits=false, xmode=log, log basis x = 2, " +
+          "xlabel=Problem size, ylabel=Evaluations / problem size, " +
           "width=#1, height=#2, legend pos=outer north east]")
         for (((algo, plot), index) <- plots.toIndexedSeq.zipWithIndex) {
           val tag = intToString(index)
