@@ -49,7 +49,7 @@ object Main {
 
       val fixedOneLLConfigurations = for {
         x <- 2 to 20
-        np <- 7 to 16
+        np <- 4 to 22
         n = 1 << np
         p <- Seq(getOneMax(n), getRandom3CNF(n))
       } yield Config(p, getOnePlusLLx(n, x))
