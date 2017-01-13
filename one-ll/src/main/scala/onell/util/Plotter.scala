@@ -34,29 +34,37 @@ class Plotter(classifier: MutationAwarePseudoBooleanProblem[_] => (String, Doubl
   )
   private def intToColor(index: Int) = intToColor0(index % intToColor0.size)
 
-  def writeAllTikZPlots(filename: String, filter: String => Boolean): Unit = {
+  def writeAllTikZPlots(filename: String, iqr: Boolean, filter: String => Boolean): Unit = {
     try {
       val pw = new PrintWriter(filename)
-      val delta = 0.05
+      val delta = 0.25
       for ((clazz, plots) <- map if filter(clazz)) {
         pw.println(s"\\newcommand{\\iqrPlot$clazz}[2]{")
         pw.println("  \\begin{tikzpicture}")
-        pw.println("    \\begin{axis}[enlargelimits=false, xmode=log, log basis x = 2, " +
+        pw.println("    \\begin{axis}[enlargelimits=false, xmode=log, log basis x = 2, cycle list name = my custom, " +
           "xlabel=Problem size, ylabel=Evaluations / problem size, " +
           "width=#1, height=#2, legend pos=outer north east]")
         for (((algo, plot), index) <- plots.toIndexedSeq.zipWithIndex) {
           val tag = intToString(index)
-          pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=s$tag, forget plot] coordinates {")
-          for ((x, stat) <- plot) {
-            pw.print(s"($x, ${stat.percentile(0.5 - delta) / x})")
+          if (iqr) {
+            pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=s$tag, forget plot] coordinates {")
+            for ((x, stat) <- plot) {
+              pw.print(s"($x, ${stat.percentile(0.5 - delta) / x})")
+            }
+            pw.println("};")
+            pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=e$tag, forget plot] coordinates {")
+            for ((x, stat) <- plot) {
+              pw.print(s"($x, ${stat.percentile(0.5 + delta) / x})")
+            }
+            pw.println("};")
+            pw.println(s"      \\addplot[fill = ${intToColor(index)}, area legend] fill between[of = s$tag and e$tag];")
+          } else {
+            pw.print(s"      \\addplot+[mark size=1.2] coordinates {")
+            for ((x, stat) <- plot) {
+              pw.print(s"($x, ${stat.median / x})")
+            }
+            pw.println("};")
           }
-          pw.println("};")
-          pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=e$tag, forget plot] coordinates {")
-          for ((x, stat) <- plot) {
-            pw.print(s"($x, ${stat.percentile(0.5 + delta) / x})")
-          }
-          pw.println("};")
-          pw.println(s"      \\addplot[fill = ${intToColor(index)}, area legend] fill between[of = s$tag and e$tag];")
           pw.println(s"      \\addlegendentry{$algo};")
         }
         pw.println("    \\end{axis}")

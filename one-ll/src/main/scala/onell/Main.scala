@@ -98,7 +98,7 @@ object Main {
       plotter.writeAllTikZPlots("../../../../itmo/genome-work" +
                                 "/ai-papers/conferences/GECCO/2017/onell-random3cnf" +
                                 "/pic/tikz-plots.tex",
-        s => s == "OneMax" || s == "RandomCNF")
+        iqr = false, s => s == "OneMax" || s == "RandomCNF")
     } finally {
       runner.close()
     }
