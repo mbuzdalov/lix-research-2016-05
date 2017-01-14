@@ -31,7 +31,7 @@ object Main {
     val runner = new Runner
     try {
       val oneLLConfigurations = {
-        (4 to 22).map(1 << _).flatMap(n => Seq(
+        (4 to 24).map(1 << _).flatMap(n => Seq(
           Config(getOneMax(n), getOnePlusOneEA(n)),
           Config(getOneMax(n), getOnePlusLLN(n)),
           Config(getOneMax(n), getOnePlusLLLog(n))
@@ -49,7 +49,7 @@ object Main {
 
       val fixedOneLLConfigurations = (for {
         x <- 2 to 20
-        np <- 4 to 22
+        np <- 4 to 24
         n = 1 << np
       } yield Config(getOneMax(n), getOnePlusLLx(n, x))) ++ (for {
         x <- 2 to 20
