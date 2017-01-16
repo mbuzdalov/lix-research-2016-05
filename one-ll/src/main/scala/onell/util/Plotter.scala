@@ -25,15 +25,6 @@ class Plotter(classifier: MutationAwarePseudoBooleanProblem[_] => (String, Doubl
       intToString(value / 26) + ch
     }
   }
-  private val intToColor0 = IndexedSeq(
-    "red", "green", "blue", "Apricot", "Bittersweet",
-    "DarkOrchid", "JungleGreen", "LimeGreen", "Mulberry",
-    "OrangeRed", "Peach", "RedOrange", "RoyalPurple",
-    "Sepia", "SpringGreen", "Rhodamine", "VioletRed",
-    "YellowOrange", "Magenta", "NavyBlue", "RubineRed", "black"
-  )
-  private def intToColor(index: Int) = intToColor0(index % intToColor0.size)
-
   def writeAllTikZPlots(filename: String, iqr: Boolean, filter: String => Boolean): Unit = {
     try {
       val pw = new PrintWriter(filename)
@@ -47,17 +38,17 @@ class Plotter(classifier: MutationAwarePseudoBooleanProblem[_] => (String, Doubl
         for (((algo, plot), index) <- plots.toIndexedSeq.zipWithIndex) {
           val tag = intToString(index)
           if (iqr) {
-            pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=s$tag, forget plot] coordinates {")
+            pw.print(s"      \\addplot[name path=s$tag, forget plot] coordinates {")
             for ((x, stat) <- plot) {
               pw.print(s"($x, ${stat.percentile(0.5 - delta) / x})")
             }
             pw.println("};")
-            pw.print(s"      \\addplot[color = ${intToColor(index)}, name path=e$tag, forget plot] coordinates {")
+            pw.print(s"      \\addplot[name path=e$tag, forget plot] coordinates {")
             for ((x, stat) <- plot) {
               pw.print(s"($x, ${stat.percentile(0.5 + delta) / x})")
             }
             pw.println("};")
-            pw.println(s"      \\addplot[fill = ${intToColor(index)}, area legend] fill between[of = s$tag and e$tag];")
+            pw.println(s"      \\addplot fill between[of = s$tag and e$tag];")
           } else {
             pw.print(s"      \\addplot+[mark size=1.2] coordinates {")
             for ((x, stat) <- plot) {
