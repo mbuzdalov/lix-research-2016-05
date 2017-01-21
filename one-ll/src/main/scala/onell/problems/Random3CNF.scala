@@ -31,7 +31,7 @@ object Random3CNF {
     }
 
     private val clausesOfVar = {
-      val builders = Array.fill(n)(Array.newBuilder[Int])
+      val degrees = Array.ofDim[Int](n)
       for (i <- 0 until m) {
         val i1 = 3 * i
         val i2 = i1 + 1
@@ -44,11 +44,27 @@ object Random3CNF {
           clauseVal(i2) = rng.nextBoolean()
           clauseVal(i3) = rng.nextBoolean()
         } while (!isOk(i, assignment))
-        builders(clauseVar(i1)) += i
-        builders(clauseVar(i2)) += i
-        builders(clauseVar(i3)) += i
+        degrees(clauseVar(i1)) += 1
+        degrees(clauseVar(i2)) += 1
+        degrees(clauseVar(i3)) += 1
       }
-      builders.map(_.result())
+      val rv = Array.ofDim[Array[Int]](n)
+      for (i <- 0 until n) {
+        rv(i) = Array.ofDim(degrees(i))
+        degrees(i) = 0
+      }
+      for (i <- 0 until m) {
+        val j1 = clauseVar(3 * i)
+        val j2 = clauseVar(3 * i + 1)
+        val j3 = clauseVar(3 * i + 2)
+        rv(j1)(degrees(j1)) = i
+        degrees(j1) += 1
+        rv(j2)(degrees(j2)) = i
+        degrees(j2) += 1
+        rv(j3)(degrees(j3)) = i
+        degrees(j3) += 1
+      }
+      rv
     }
 
     private var usedClauses = new MutableIntSet(m)

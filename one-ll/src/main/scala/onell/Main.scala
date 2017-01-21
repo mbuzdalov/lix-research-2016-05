@@ -37,7 +37,7 @@ object Main {
           Config(getOneMax(n), getOnePlusLLLog(n))
         ))
       } ++ {
-        (7 to 17).map(1 << _).flatMap(n => Seq(
+        (7 to 20).map(1 << _).flatMap(n => Seq(
           Config(getRandom3CNF(n), getOnePlusOneEA(n)),
           Config(getRandom3CNF(n), getOnePlusLLLog(n))
         ))
