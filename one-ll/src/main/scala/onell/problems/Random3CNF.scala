@@ -6,6 +6,8 @@ import onell.MutationAwarePseudoBooleanProblem.Instance
 import onell.util.MutableIntSet
 import onell.{Mutation, MutationAwarePseudoBooleanProblem}
 
+import scala.annotation.tailrec
+
 /**
   * A random planted-solution 3-CNF-SAT instance.
   */
@@ -16,92 +18,113 @@ class Random3CNF(n: Int, m: Int) extends MutationAwarePseudoBooleanProblem[Int] 
 
 object Random3CNF {
   final class Instance(n: Int, m: Int) extends MutationAwarePseudoBooleanProblem.Instance[Int] {
-    private val rng = ThreadLocalRandom.current()
-    private val assignment = Array.fill(n)(rng.nextBoolean())
+    private val assignment = Array.ofDim[Boolean](n)
     private val clauseVar = Array.ofDim[Int](3 * m)
     private val clauseVal = Array.ofDim[Boolean](3 * m)
+    private val clausesOfVarValues = Array.ofDim[Int](3 * m)
+    private val clausesOfVarIndices = Array.ofDim[Int](n + 1)
+    private val usedClauses = new MutableIntSet(m)
 
-    private def isOk(clauseIndex: Int, solution: Array[Boolean]): Boolean = {
+    private def isOk(clauseIndex: Int, clauseVal: Array[Boolean], clauseVar: Array[Int], solution: Array[Boolean]): Boolean = {
       val i1 = 3 * clauseIndex
       val i2 = i1 + 1
       val i3 = i2 + 1
-      solution(clauseVar(i1)) == clauseVal(i1) ||
-        solution(clauseVar(i2)) == clauseVal(i2) ||
-        solution(clauseVar(i3)) == clauseVal(i3)
+      solution(clauseVar(i1)) == clauseVal(i1) || solution(clauseVar(i2)) == clauseVal(i2) || solution(clauseVar(i3)) == clauseVal(i3)
     }
 
-    private val clausesOfVar = {
-      val degrees = Array.ofDim[Int](n)
-      for (i <- 0 until m) {
-        val i1 = 3 * i
-        val i2 = i1 + 1
-        val i3 = i2 + 1
-        do {
-          clauseVar(i1) = rng.nextInt(n)
-          clauseVar(i2) = rng.nextInt(n)
-          clauseVar(i3) = rng.nextInt(n)
-          clauseVal(i1) = rng.nextBoolean()
-          clauseVal(i2) = rng.nextBoolean()
-          clauseVal(i3) = rng.nextBoolean()
-        } while (!isOk(i, assignment))
+    @tailrec
+    private def initAssignment(i: Int, n: Int, assignment: Array[Boolean], rng: ThreadLocalRandom): Unit = if (i < n) {
+      assignment(i) = rng.nextBoolean()
+      initAssignment(i + 1, n, assignment, rng)
+    }
+    @tailrec
+    private def initClause(
+      i: Int, i1: Int, i2: Int, i3: Int, n: Int, assignment: Array[Boolean],
+      clauseVal: Array[Boolean], clauseVar: Array[Int], degrees: Array[Int], rng: ThreadLocalRandom
+    ): Unit = {
+      clauseVar(i1) = rng.nextInt(n)
+      clauseVar(i2) = rng.nextInt(n)
+      clauseVar(i3) = rng.nextInt(n)
+      clauseVal(i1) = rng.nextBoolean()
+      clauseVal(i2) = rng.nextBoolean()
+      clauseVal(i3) = rng.nextBoolean()
+      if (!isOk(i, clauseVal, clauseVar, assignment)) {
+        initClause(i, i1, i2, i3, n, assignment, clauseVal, clauseVar, degrees, rng)
+      } else {
         degrees(clauseVar(i1)) += 1
         degrees(clauseVar(i2)) += 1
         degrees(clauseVar(i3)) += 1
       }
-      val rv = Array.ofDim[Array[Int]](n)
-      for (i <- 0 until n) {
-        rv(i) = Array.ofDim(degrees(i))
-        degrees(i) = 0
+    }
+    @tailrec
+    private def initClauses(
+      i: Int, n: Int, m: Int, assignment: Array[Boolean], clauseVal: Array[Boolean],
+      clauseVar: Array[Int], degrees: Array[Int], rng: ThreadLocalRandom
+    ): Unit = {
+      if (i < m) {
+        initClause(i, 3 * i, 3 * i + 1, 3 * i + 2, n, assignment, clauseVal, clauseVar, degrees, rng)
+        initClauses(i + 1, n, m, assignment, clauseVal, clauseVar, degrees, rng)
       }
-      for (i <- 0 until m) {
-        val j1 = clauseVar(3 * i)
-        val j2 = clauseVar(3 * i + 1)
-        val j3 = clauseVar(3 * i + 2)
-        rv(j1)(degrees(j1)) = i
-        degrees(j1) += 1
-        rv(j2)(degrees(j2)) = i
-        degrees(j2) += 1
-        rv(j3)(degrees(j3)) = i
-        degrees(j3) += 1
-      }
-      rv
+    }
+    @tailrec
+    private def makePartialSums(i: Int, n: Int, degrees: Array[Int]): Unit = if (i <= n) {
+      degrees(i) += degrees(i - 1)
+      makePartialSums(i + 1, n, degrees)
+    }
+    @tailrec
+    private def fillResultArrays(
+      i: Int, m: Int, degrees: Array[Int], values: Array[Int], clauseVar: Array[Int]
+    ): Unit = if (i < m) {
+      val j1 = clauseVar(3 * i)
+      val j2 = clauseVar(3 * i + 1)
+      val j3 = clauseVar(3 * i + 2)
+      degrees(j1) -= 1
+      values(degrees(j1)) = i
+      degrees(j2) -= 1
+      values(degrees(j2)) = i
+      degrees(j3) -= 1
+      values(degrees(j3)) = i
+      fillResultArrays(i + 1, m, degrees, values, clauseVar)
     }
 
-    private var usedClauses = new MutableIntSet(m)
+    initAssignment(0, n, assignment, ThreadLocalRandom.current())
+    initClauses(0, n, m, assignment, clauseVal, clauseVar, clausesOfVarIndices, ThreadLocalRandom.current())
+    makePartialSums(1, n, clausesOfVarIndices)
+    fillResultArrays(0, m, clausesOfVarIndices, clausesOfVarValues, clauseVar)
 
     override def equivalenceFollows(fitness: Int): Boolean = false
     override def isOptimumFitness(fitness: Int): Boolean = fitness == m
     override def numberOfOptimumFitnessValues: Int = 1
     override def problemSize: Int = n
 
-    override def apply(solution: Array[Boolean]): Int = (0 until m).count(i => isOk(i, solution))
+    override def apply(solution: Array[Boolean]): Int = {
+      val cvl = clauseVal
+      val cvr = clauseVar
+      (0 until m).count(i => isOk(i, cvl, cvr, solution))
+    }
     override def apply(solution: Array[Boolean],
                        originalFitness: Int,
                        mutation: Mutation
                       ): Int = {
       if (3 * mutation.size < n) {
-        usedClauses.clear()
+        val uc = usedClauses
+        val cvi = clausesOfVarIndices
+        val cvv = clausesOfVarValues
+        val cvl = clauseVal
+        val cvr = clauseVar
+        uc.clear()
         for (i <- mutation) {
-          val localClauses = clausesOfVar(i)
-          var j = localClauses.length - 1
-          while (j >= 0) {
-            usedClauses += localClauses(j)
-            j -= 1
+          var j = cvi(i)
+          val jMax = cvi(i + 1)
+          while (j < jMax) {
+            uc += cvv(j)
+            j += 1
           }
         }
-        var newFitness = originalFitness
-        for (i <- usedClauses) {
-          if (isOk(i, solution)) {
-            newFitness -= 1
-          }
-        }
+        val fitnessDecrease = uc.count(i => isOk(i, cvl, cvr, solution))
         mutation.mutate(solution)
-        for (i <- usedClauses) {
-          if (isOk(i, solution)) {
-            newFitness += 1
-          }
-        }
-        newFitness
+        val fitnessIncrease = uc.count(i => isOk(i, cvl, cvr, solution))
+        originalFitness + fitnessIncrease - fitnessDecrease
       } else {
         // This path should be faster for very large mutations
         mutation.mutate(solution)

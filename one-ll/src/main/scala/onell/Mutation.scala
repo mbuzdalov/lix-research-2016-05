@@ -2,24 +2,17 @@ package onell
 
 import java.util.Random
 
-import onell.util.{IntSet, MutableIntSet}
+import onell.util.ArrayIntSet
 
 /**
   * A mutation operator which generates mutation indices
   * based on the problem size `n` and the mutation probability `p`.
   */
-class Mutation(n: Int, initialP: Double, rng: Random) extends IntSet {
+class Mutation(n: Int, initialP: Double, rng: Random) extends ArrayIntSet(n) {
   private var p = initialP
   private var log1p = math.log(1 - p)
-  private final val indices = new MutableIntSet(n)
 
   private def offset() = if (p == 1) 1 else 1 + (math.log(rng.nextDouble()) / log1p).toInt
-
-  @inline
-  override final def foreach(fun: (Int) => Unit): Unit = indices.foreach(fun)
-  override def size: Int                               = indices.size
-  override def apply(element: Int): Boolean            = indices(element)
-  override def fill(array: Array[Int]): Int            = indices.fill(array)
 
   def setProbability(newP: Double): Unit = {
     p = newP
@@ -33,17 +26,17 @@ class Mutation(n: Int, initialP: Double, rng: Random) extends IntSet {
     */
   def createRandomBits(useSameIndexCount: Boolean): Unit = {
     if (!useSameIndexCount) {
-      indices.clear()
+      clear()
       var index = offset() - 1
       while (index < n) {
-        indices.add(index)
+        this += index
         index += offset()
       }
     } else {
-      val count = indices.size
-      indices.clear()
-      while (indices.size < count) {
-        indices.add(rng.nextInt(n))
+      val count = size
+      clear()
+      while (size < count) {
+        this += rng.nextInt(n)
       }
     }
   }
@@ -55,10 +48,10 @@ class Mutation(n: Int, initialP: Double, rng: Random) extends IntSet {
     */
   def chooseRandomBits(bitArray: Array[Int], bitCount: Int): Unit = {
     //Seems to be the same but I am unsure
-    indices.clear()
+    clear()
     var index = offset() - 1
     while (index < bitCount) {
-      indices.add(bitArray(index))
+      this += bitArray(index)
       index += offset()
     }
   }
@@ -68,7 +61,7 @@ class Mutation(n: Int, initialP: Double, rng: Random) extends IntSet {
     * @param bits the bits to mutate.
     */
   def mutate(bits: Array[Boolean]): Unit = {
-    for (i <- indices) {
+    for (i <- this) {
       bits(i) ^= true
     }
   }

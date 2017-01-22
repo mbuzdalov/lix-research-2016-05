@@ -29,6 +29,14 @@ trait IntSet {
   def foreach(fun: Int => Unit): Unit
 
   /**
+    * Counts how many elements of this set satisfy the given predicate.
+    * @param predicate the predicate to satisfy.
+    * @return how many elements of this set satisfy the given predicate.
+    */
+  @inline
+  def count(predicate: Int => Boolean): Int
+
+  /**
     * Fills the given array with the elements contained in the set, starting from the zeroth index.
     * Returns the number of elements.
     *

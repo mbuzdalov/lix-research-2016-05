@@ -24,7 +24,7 @@ object MutationAwarePseudoBooleanProblem {
     * An interface for an instance of the problem.
     * @tparam F the type of the fitness value.
     */
-  trait Instance[F] {
+  trait Instance[@specialized(Specializable.BestOfBreed) F] {
 
     /**
       * Checks if the fitness value corresponds to the problem's optimum.
