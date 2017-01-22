@@ -37,7 +37,7 @@ object Main {
           Config(getOneMax(n), getOnePlusLLLog(n))
         ))
       } ++ {
-        (7 to 20).map(1 << _).flatMap(n => Seq(
+        (7 to 19).map(1 << _).flatMap(n => Seq(
           Config(getRandom3CNF(n), getOnePlusOneEA(n)),
           Config(getRandom3CNF(n), getOnePlusLLLog(n))
         ))
@@ -53,7 +53,7 @@ object Main {
         n = 1 << np
       } yield Config(getOneMax(n), getOnePlusLLx(n, x))) ++ (for {
         x <- 2 to 20
-        np <- 7 to 17
+        np <- 7 to 19
         n = 1 << np
       } yield Config(getRandom3CNF(n), getOnePlusLLx(n, x)))
 
