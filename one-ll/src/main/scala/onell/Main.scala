@@ -36,11 +36,13 @@ object Main {
     val nThreads = getOption("--threads=").map(_.toInt).getOrElse(Runtime.getRuntime.availableProcessors())
     val nRuns = getOption("--runs=").map(_.toInt).getOrElse(100)
     val plotPath = getOption("--plots=")
+    val cachePath = getOption("--cache=").getOrElse("cache")
 
     println("My options are:")
     println(s"  threads=$nThreads")
     println(s"  runs=$nRuns")
-    println(s"  plotPath=$plotPath")
+    println(s"  plots='$plotPath'")
+    println(s"  cache='$cachePath'")
 
     val runner = new Runner(nThreads)
     try {
@@ -51,7 +53,7 @@ object Main {
           Config(getOneMax(n), getOnePlusLLLog(n))
         ))
       } ++ {
-        (7 to 19).map(1 << _).flatMap(n => Seq(
+        (7 to 20).map(1 << _).flatMap(n => Seq(
           Config(getRandom3CNF(n), getOnePlusOneEA(n)),
           Config(getRandom3CNF(n), getOnePlusLLLog(n))
         ))
@@ -67,7 +69,7 @@ object Main {
         n = 1 << np
       } yield Config(getOneMax(n), getOnePlusLLx(n, x))) ++ (for {
         x <- 2 to 20
-        np <- 7 to 19
+        np <- 7 to 20
         n = 1 << np
       } yield Config(getRandom3CNF(n), getOnePlusLLx(n, x)))
 
@@ -98,7 +100,7 @@ object Main {
         for (config <- configs) {
           val algorithm = config.algorithm
           val problem = config.problem
-          val stats = runner.compute("cache", algorithm, problem, nRuns).transpose.map(d => new Statistics(d))
+          val stats = runner.compute(cachePath, algorithm, problem, nRuns).transpose.map(d => new Statistics(d))
           val names = algorithm.metrics
           println(s"  ${algorithm.name}:")
           for ((stat, name) <- (stats, names).zipped) {
