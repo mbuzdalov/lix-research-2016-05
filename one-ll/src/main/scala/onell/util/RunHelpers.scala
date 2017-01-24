@@ -69,8 +69,8 @@ object RunHelpers {
     override type Fitness = F
   }
 
-  class Runner {
-    private final val service = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors())
+  class Runner(nThreads: Int) {
+    private final val service = Executors.newFixedThreadPool(nThreads)
 
     def close(): Unit = {
       service.shutdown()

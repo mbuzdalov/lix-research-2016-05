@@ -28,7 +28,21 @@ object Main {
   def main(args: Array[String]): Unit = {
     Locale.setDefault(Locale.US)
 
-    val runner = new Runner
+    def getOption(prefix: String): Option[String] = {
+      val idx = args.indexWhere(_.startsWith(prefix))
+      if (idx == -1) None else Some(args(idx).substring(prefix.length))
+    }
+
+    val nThreads = getOption("--threads=").map(_.toInt).getOrElse(Runtime.getRuntime.availableProcessors())
+    val nRuns = getOption("--runs=").map(_.toInt).getOrElse(100)
+    val plotPath = getOption("--plots=")
+
+    println("My options are:")
+    println(s"  threads=$nThreads")
+    println(s"  runs=$nRuns")
+    println(s"  plotPath=$plotPath")
+
+    val runner = new Runner(nThreads)
     try {
       val oneLLConfigurations = {
         (4 to 24).map(1 << _).flatMap(n => Seq(
@@ -84,7 +98,7 @@ object Main {
         for (config <- configs) {
           val algorithm = config.algorithm
           val problem = config.problem
-          val stats = runner.compute("cache", algorithm, problem, 100).transpose.map(d => new Statistics(d))
+          val stats = runner.compute("cache", algorithm, problem, nRuns).transpose.map(d => new Statistics(d))
           val names = algorithm.metrics
           println(s"  ${algorithm.name}:")
           for ((stat, name) <- (stats, names).zipped) {
@@ -95,10 +109,7 @@ object Main {
         }
       }
 
-      plotter.writeAllTikZPlots("../../../../itmo/genome-work" +
-                                "/ai-papers/conferences/GECCO/2017/onell-random3cnf" +
-                                "/pic/tikz-plots.tex",
-        iqr = false, s => s == "OneMax" || s == "RandomCNF")
+      plotPath.foreach(p => plotter.writeAllTikZPlots(p, iqr = false, s => s == "OneMax" || s == "RandomCNF"))
     } finally {
       runner.close()
     }
