@@ -77,13 +77,14 @@ object TracerCNF {
     def writeTraces(n: Int, runs: Int, title: String, pw: PrintWriter): Unit = {
       pw.println(s"\\newcommand{\\$title}[2]{")
       pw.println("  \\begin{tikzpicture}")
-      pw.println("    \\begin{loglogaxis}[xlabel={$\\sqrt{n / d}$}, ylabel={$\\lambda$}, log basis x = 2, width=#1, height=#2]")
+      pw.println("    \\begin{loglogaxis}[[enlargelimits=false, scale only axis, cycle list name=escape-style, " +
+        "xlabel={$\\sqrt{n / d}$}, ylabel={$\\lambda$}, log basis x = 2, log basis y = 2, width=#1, height=#2]")
       for (trace <- (0 until runs).par.map(_ => getTrace(n)).seq) {
-        pw.print("      \\addplot coordinates {")
-        pw.println(trace.grouped(10).map(_.map(p => f"(${p._1}%.3g, ${p._2}%.3g)").mkString(" ")).mkString("\n        ", "\n        ", "      \n};"))
+        pw.print("      \\ifcompileescapeplots{\\addplot coordinates {")
+        pw.println(trace.grouped(10).map(_.map(p => f"(${p._1}%.3g, ${p._2}%.3g)").mkString(" ")).mkString("\n        ", "\n        ", "\n      };}"))
       }
       val sqrtN = math.sqrt(n)
-      pw.print(s"      \\addplot coordinates {(1,1) ($sqrtN,$sqrtN)};")
+      pw.println(s"      \\addplot coordinates {(1,1) ($sqrtN,$sqrtN)};")
       pw.println("    \\end{loglogaxis}")
       pw.println("  \\end{tikzpicture}")
       pw.println("}")
@@ -96,7 +97,8 @@ object TracerCNF {
       (1 << 11, "escapeEleven"),
       (1 << 12, "escapeTwelve"),
       (1 << 13, "escapeThirteen"),
-      (1 << 14, "escapeFourteen")
+      (1 << 14, "escapeFourteen"),
+      (1 << 15, "escapeFifteen")
     )) {
       writeTraces(n, 5, t, pw)
     }
