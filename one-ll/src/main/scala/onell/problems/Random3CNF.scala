@@ -2,7 +2,6 @@ package onell.problems
 
 import java.util.concurrent.ThreadLocalRandom
 
-import onell.MutationAwarePseudoBooleanProblem.Instance
 import onell.util.MutableIntSet
 import onell.{Mutation, MutationAwarePseudoBooleanProblem}
 
@@ -13,7 +12,7 @@ import scala.annotation.tailrec
   */
 class Random3CNF(n: Int, m: Int) extends MutationAwarePseudoBooleanProblem[Int] {
   override def name: String = s"Random3CNF($n,$m)"
-  override def newInstance: Instance[Int] = new Random3CNF.Instance(n, m)
+  override def newInstance = new Random3CNF.Instance(n, m)
 }
 
 object Random3CNF {
@@ -96,6 +95,8 @@ object Random3CNF {
     override def isOptimumFitness(fitness: Int): Boolean = fitness == m
     override def numberOfOptimumFitnessValues: Int = 1
     override def problemSize: Int = n
+
+    def distance(solution: Array[Boolean]): Int = (0 until n).count(i => solution(i) != assignment(i))
 
     override def apply(solution: Array[Boolean]): Int = {
       val cvl = clauseVal

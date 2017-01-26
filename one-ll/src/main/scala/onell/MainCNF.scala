@@ -6,6 +6,7 @@ import onell.algorithms.{OnePlusLambdaLambdaGA, OnePlusOneEA}
 import onell.problems.{OneMax, Random3CNF}
 import onell.util.Plotter
 import onell.util.RunHelpers._
+import onell.util.Misc._
 
 import scala.language.implicitConversions
 
@@ -24,15 +25,10 @@ object MainCNF {
   def main(args: Array[String]): Unit = {
     Locale.setDefault(Locale.US)
 
-    def getOption(prefix: String): Option[String] = {
-      val idx = args.indexWhere(_.startsWith(prefix))
-      if (idx == -1) None else Some(args(idx).substring(prefix.length))
-    }
-
-    val nThreads = getOption("--threads=").map(_.toInt).getOrElse(Runtime.getRuntime.availableProcessors())
-    val nRuns = getOption("--runs=").map(_.toInt).getOrElse(100)
-    val plotPath = getOption("--plots=")
-    val cachePath = getOption("--cache=").getOrElse("cache")
+    val nThreads = args.getOption("--threads=").map(_.toInt).getOrElse(Runtime.getRuntime.availableProcessors())
+    val nRuns = args.getOption("--runs=").map(_.toInt).getOrElse(100)
+    val plotPath = args.getOption("--plots=")
+    val cachePath = args.getOption("--cache=").getOrElse("cache")
 
     println("My options are:")
     println(s"  threads=$nThreads")
