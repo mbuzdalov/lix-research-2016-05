@@ -2,25 +2,17 @@ package onell
 
 import java.util.Locale
 
-import onell.algorithms.{GlobalSEMO, OnePlusLambdaLambdaGA, OnePlusOneEA}
-import onell.problems.{LeadingOnesTrailingZeros, OneMax, OneZeroMax, Random3CNF}
+import onell.algorithms.GlobalSEMO
+import onell.problems.{LeadingOnesTrailingZeros, OneZeroMax}
 import onell.util.Plotter
 import onell.util.RunHelpers._
 
 import scala.language.implicitConversions
 
 /**
-  * The main class which runs experiments.
+  * The main class which runs experiments for SEMO.
   */
-object Main {
-  def getOneMax(n: Int)     = new OneMax(n)
-  def getRandom3CNF(n: Int) = new Random3CNF(n, (4 * n * math.log(n)).toInt)
-
-  def getOnePlusOneEA(n: Int) = OnePlusOneEA
-  def getOnePlusLLN(n: Int)   = new OnePlusLambdaLambdaGA()
-  def getOnePlusLLLog(n: Int) = new OnePlusLambdaLambdaGA(1, "1", 2 * math.log(n + 1), "ln n", "$\\lambda \\le 2 \\ln n$")
-  def getOnePlusLLx(n: Int, x: Int) = new OnePlusLambdaLambdaGA(x, x.toString, x, x.toString, s"$$\\lambda = $x$$")
-
+object MainSEMO {
   def getSimpleSEMO    = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Uniform
   def getCrowdingSEMO  = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Crowding
   def getFertilitySEMO = new GlobalSEMO with GlobalSEMO.Niching.None with GlobalSEMO.Selection.Fertility
@@ -35,44 +27,15 @@ object Main {
 
     val nThreads = getOption("--threads=").map(_.toInt).getOrElse(Runtime.getRuntime.availableProcessors())
     val nRuns = getOption("--runs=").map(_.toInt).getOrElse(100)
-    val plotPath = getOption("--plots=")
     val cachePath = getOption("--cache=").getOrElse("cache")
 
     println("My options are:")
     println(s"  threads=$nThreads")
     println(s"  runs=$nRuns")
-    println(s"  plots='$plotPath'")
     println(s"  cache='$cachePath'")
 
     val runner = new Runner(nThreads)
     try {
-      val oneLLConfigurations = {
-        (4 to 24).map(1 << _).flatMap(n => Seq(
-          Config(getOneMax(n), getOnePlusOneEA(n)),
-          Config(getOneMax(n), getOnePlusLLN(n)),
-          Config(getOneMax(n), getOnePlusLLLog(n))
-        ))
-      } ++ {
-        (7 to 20).map(1 << _).flatMap(n => Seq(
-          Config(getRandom3CNF(n), getOnePlusOneEA(n)),
-          Config(getRandom3CNF(n), getOnePlusLLLog(n))
-        ))
-      } ++ {
-        (7 to 16).map(1 << _).flatMap(n => Seq(
-          Config(getRandom3CNF(n), getOnePlusLLN(n))
-        ))
-      }
-
-      val fixedOneLLConfigurations = (for {
-        x <- 2 to 20
-        np <- 4 to 24
-        n = 1 << np
-      } yield Config(getOneMax(n), getOnePlusLLx(n, x))) ++ (for {
-        x <- 2 to 20
-        np <- 7 to 20
-        n = 1 << np
-      } yield Config(getRandom3CNF(n), getOnePlusLLx(n, x)))
-
       val semoConfigurations = Seq(100, 200, 300, 400, 500, 1000).flatMap(n => Seq(
         Config(new OneZeroMax(n), getSimpleSEMO),
         Config(new OneZeroMax(n), getCrowdingSEMO),
@@ -82,8 +45,6 @@ object Main {
         Config(new LeadingOnesTrailingZeros(n), getFertilitySEMO)
       ))
 
-      val oneLLByProblem = byProblem(oneLLConfigurations)
-      val fixedOneLLByProblem = byProblem(fixedOneLLConfigurations)
       val semoByProblem = byProblem(semoConfigurations)
 
       val plotter = new Plotter(p => {
@@ -95,7 +56,7 @@ object Main {
         (title, name.substring(open + 1, next).toDouble)
       })
 
-      for ((problemName, configs) <- oneLLByProblem ++ fixedOneLLByProblem ++ semoByProblem) {
+      for ((problemName, configs) <- semoByProblem) {
         println(s"$problemName:")
         for (config <- configs) {
           val algorithm = config.algorithm
@@ -110,8 +71,6 @@ object Main {
           plotter.append(algorithm, problem, stats(fevMetricIndex))
         }
       }
-
-      plotPath.foreach(p => plotter.writeAllTikZPlots(p, iqr = false, s => s == "OneMax" || s == "RandomCNF"))
     } finally {
       runner.close()
     }
