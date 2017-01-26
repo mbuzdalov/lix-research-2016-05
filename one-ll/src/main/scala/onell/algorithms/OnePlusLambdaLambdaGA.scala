@@ -22,7 +22,9 @@ class OnePlusLambdaLambdaGA(
 
   override def name: String = s"(1+LL)[$minimalLambdaText;$maximalLambdaText]"
   override def metrics: Seq[String] = Seq("Fitness evaluations", "Iterations", "Maximal lambda")
-  override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[Int]): Seq[Double] = {
+  override def solve(problem: MutationAwarePseudoBooleanProblem.Instance[Int]): Seq[Double] = solve(problem, (_, _) => ())
+
+  def solve(problem: MutationAwarePseudoBooleanProblem.Instance[Int], trace: (Int, Double) => Unit): Seq[Double] = {
     val rng = ThreadLocalRandom.current()
     val n = problem.problemSize
     val mutation = new Mutation(n, minimalLambda / n, rng)
@@ -38,6 +40,8 @@ class OnePlusLambdaLambdaGA(
     var firstChildDiffCount = 0
     val secondChildDiff = Array.ofDim[Int](n)
     var secondChildDiffCount = 0
+
+    trace(fitness, lambda)
 
     while (!problem.isOptimumFitness(fitness)) {
       mutation.setProbability(lambda / n)
@@ -96,6 +100,7 @@ class OnePlusLambdaLambdaGA(
           i += 1
         }
       }
+      trace(fitness, lambda)
       evaluations += 2 * lambdaInt
       iterations += 1
     }
