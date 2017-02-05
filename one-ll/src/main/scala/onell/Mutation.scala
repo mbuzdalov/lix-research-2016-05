@@ -9,10 +9,10 @@ import onell.util.ArrayIntSet
   * based on the problem size `n` and the mutation probability `p`.
   */
 class Mutation(n: Int, initialP: Double, rng: Random) extends ArrayIntSet(n) {
-  private var p = initialP
-  private var log1p = math.log(1 - p)
+  private[this] var p = initialP
+  private[this] var log1p = math.log(1 - p)
 
-  private def offset() = if (p == 1) 1 else 1 + (math.log(rng.nextDouble()) / log1p).toInt
+  private[this] def offset() = if (p == 1) 1 else 1 + (math.log(rng.nextDouble()) / log1p).toInt
 
   def setProbability(newP: Double): Unit = {
     p = newP

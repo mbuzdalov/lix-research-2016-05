@@ -17,14 +17,14 @@ class Random3CNF(n: Int, m: Int) extends MutationAwarePseudoBooleanProblem[Int] 
 
 object Random3CNF {
   final class Instance(n: Int, m: Int) extends MutationAwarePseudoBooleanProblem.Instance[Int] {
-    private val assignment = Array.ofDim[Boolean](n)
-    private val clauseVar = Array.ofDim[Int](3 * m)
-    private val clauseVal = Array.ofDim[Boolean](3 * m)
-    private val clausesOfVarValues = Array.ofDim[Int](3 * m)
-    private val clausesOfVarIndices = Array.ofDim[Int](n + 1)
-    private val usedClauses = new MutableIntSet(m)
+    private[this] val assignment = Array.ofDim[Boolean](n)
+    private[this] val clauseVar = Array.ofDim[Int](3 * m)
+    private[this] val clauseVal = Array.ofDim[Boolean](3 * m)
+    private[this] val clausesOfVarValues = Array.ofDim[Int](3 * m)
+    private[this] val clausesOfVarIndices = Array.ofDim[Int](n + 1)
+    private[this] val usedClauses = new MutableIntSet(m)
 
-    private def isOk(clauseIndex: Int, clauseVal: Array[Boolean], clauseVar: Array[Int], solution: Array[Boolean]): Boolean = {
+    private[this] def isOk(clauseIndex: Int, clauseVal: Array[Boolean], clauseVar: Array[Int], solution: Array[Boolean]): Boolean = {
       val i1 = 3 * clauseIndex
       val i2 = i1 + 1
       val i3 = i2 + 1
@@ -32,12 +32,12 @@ object Random3CNF {
     }
 
     @tailrec
-    private def initAssignment(i: Int, n: Int, assignment: Array[Boolean], rng: ThreadLocalRandom): Unit = if (i < n) {
+    private[this] def initAssignment(i: Int, n: Int, assignment: Array[Boolean], rng: ThreadLocalRandom): Unit = if (i < n) {
       assignment(i) = rng.nextBoolean()
       initAssignment(i + 1, n, assignment, rng)
     }
     @tailrec
-    private def initClause(
+    private[this] def initClause(
       i: Int, i1: Int, i2: Int, i3: Int, n: Int, assignment: Array[Boolean],
       clauseVal: Array[Boolean], clauseVar: Array[Int], degrees: Array[Int], rng: ThreadLocalRandom
     ): Unit = {
@@ -56,7 +56,7 @@ object Random3CNF {
       }
     }
     @tailrec
-    private def initClauses(
+    private[this] def initClauses(
       i: Int, n: Int, m: Int, assignment: Array[Boolean], clauseVal: Array[Boolean],
       clauseVar: Array[Int], degrees: Array[Int], rng: ThreadLocalRandom
     ): Unit = {
@@ -66,12 +66,12 @@ object Random3CNF {
       }
     }
     @tailrec
-    private def makePartialSums(i: Int, n: Int, degrees: Array[Int]): Unit = if (i <= n) {
+    private[this] def makePartialSums(i: Int, n: Int, degrees: Array[Int]): Unit = if (i <= n) {
       degrees(i) += degrees(i - 1)
       makePartialSums(i + 1, n, degrees)
     }
     @tailrec
-    private def fillResultArrays(
+    private[this] def fillResultArrays(
       i: Int, m: Int, degrees: Array[Int], values: Array[Int], clauseVar: Array[Int]
     ): Unit = if (i < m) {
       val j1 = clauseVar(3 * i)

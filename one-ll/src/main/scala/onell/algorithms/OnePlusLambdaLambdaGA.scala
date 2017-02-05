@@ -14,8 +14,8 @@ class OnePlusLambdaLambdaGA(
   maximalLambdaText: String = "n",
   val pgfPlotLegend: String = "$\\lambda \\le n$"
 ) extends Algorithm[Int] {
-  private final val tuningStrength = 1.5
-  private final val tuningStrength4 = math.pow(tuningStrength, 0.25)
+  private[this] final val tuningStrength = 1.5
+  private[this] final val tuningStrength4 = math.pow(tuningStrength, 0.25)
 
   // last change: if the resulting individual is equal to x, don't think it is good
   override def revision: String = "rev2"

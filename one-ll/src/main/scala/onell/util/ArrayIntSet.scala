@@ -6,7 +6,7 @@ package onell.util
 class ArrayIntSet(maxElement: Int) extends IntSet {
   protected final val contained: Array[Boolean] = Array.ofDim(maxElement)
   protected final val elements: Array[Int] = Array.ofDim(maxElement)
-  private var mySize = 0
+  private[this] var mySize = 0
 
   /**
     * Clears this set.
